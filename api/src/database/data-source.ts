@@ -48,33 +48,36 @@ import { Vote } from "./entities/Vote";
 
 
 //Production
-let dataSource: DataSource | null = null;
+declare global {
+  // eslint-disable-next-line no-var
+  var __appDataSource: DataSource | undefined;
+  // eslint-disable-next-line no-var
+  var __appDataSourceInitPromise: Promise<DataSource> | undefined;
+}
 
-export const AppDataSource = async () => {
-  if (dataSource && dataSource.isInitialized) {
-    return dataSource;
-  }
-
-  dataSource = new DataSource({
+function buildDataSource() {
+  return new DataSource({
     type: "postgres",
     url: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
     synchronize: false,
     logging: process.env.NODE_ENV === "development",
-    entities: [
-      AuditLog,
-      Category,
-      Election,
-      Nominee,
-      Payment,
-      User,
-      Vote,
-    ],
+    entities: [AuditLog, Category, Election, Nominee, Payment, User, Vote],
   });
+}
 
-  if (!dataSource.isInitialized) {
-    await dataSource.initialize();
+export const AppDataSource = async () => {
+  if (globalThis.__appDataSource?.isInitialized) {
+    return globalThis.__appDataSource;
   }
 
-  return dataSource;
+  // Prevent concurrent callers from each starting their own initialize()
+  if (!globalThis.__appDataSourceInitPromise) {
+    const ds = globalThis.__appDataSource ?? buildDataSource();
+    globalThis.__appDataSource = ds;
+    globalThis.__appDataSourceInitPromise = ds.initialize();
+  }
+
+  await globalThis.__appDataSourceInitPromise;
+  return globalThis.__appDataSource!;
 };
