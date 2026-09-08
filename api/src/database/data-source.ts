@@ -12,6 +12,23 @@ import { Nominee } from "./entities/Nominee";
 import { Payment } from "./entities/Payment";
 import { Vote } from "./entities/Vote";
 
+// Guard against bundler minification renaming entity classes, which
+// corrupts TypeORM's internal dependency graph (targetName = class.name).
+// See: TypeORMError "Cyclic dependency: '<letter>'" in production builds.
+function pinName(cls: Function, name: string) {
+  if (cls.name !== name) {
+    Object.defineProperty(cls, "name", { value: name, configurable: true });
+  }
+}
+
+pinName(User, "User");
+pinName(Category, "Category");
+pinName(AuditLog, "AuditLog");
+pinName(Election, "Election");
+pinName(Nominee, "Nominee");
+pinName(Payment, "Payment");
+pinName(Vote, "Vote");
+
 // let dataSource: DataSource | null = null;
 
 // export const AppDataSource = async () => {
