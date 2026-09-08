@@ -27,7 +27,7 @@
     "react-dom": "19.2.8",
     "sharp": "^0.35.4",
     "slugify": "^1.6.9",
-    "typeorm": "^0.3.20",
+    "typeorm": "^1.1.1",
     "uuid": "^14.0.2"
   },
   "devDependencies": {
