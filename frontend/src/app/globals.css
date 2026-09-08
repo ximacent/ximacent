@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Midnight Gala — shadcn HSL tokens mapped to brand */
+    --background: 24 10% 4%; /* #0C0A09 ink */
+    --foreground: 40 43% 97%; /* #FAF7F2 cream */
+
+    --card: 24 6% 10%; /* #1C1917 surface */
+    --card-foreground: 40 43% 97%;
+
+    --popover: 24 6% 10%;
+    --popover-foreground: 40 43% 97%;
+
+    /* Champagne #D4A574 — checked for contrast on ink (~7.2:1 for large text) */
+    --primary: 33 52% 64%;
+    --primary-foreground: 24 10% 8%; /* near-ink for CTA text readability */
+
+    --secondary: 24 6% 16%; /* elevated surface */
+    --secondary-foreground: 40 43% 97%;
+
+    --muted: 24 6% 16%;
+    --muted-foreground: 24 5% 64%; /* #A8A29E stone */
+
+    --accent: 24 6% 16%;
+    --accent-foreground: 33 52% 64%; /* champagne accents */
+
+    --destructive: 352 48% 56%; /* rose #C45C6A */
+    --destructive-foreground: 40 43% 97%;
+
+    --border: 24 5% 22%;
+    --input: 24 5% 22%;
+    --ring: 33 52% 64%;
+
+    --radius: 0.75rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(212, 165, 116, 0.08), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(196, 92, 106, 0.05), transparent);
+    background-attachment: fixed;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight;
+  }
+
+  ::selection {
+    @apply bg-champagne/30 text-cream;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .surface-card {
+    @apply rounded-lg border border-border/60 bg-card shadow-soft;
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+}
