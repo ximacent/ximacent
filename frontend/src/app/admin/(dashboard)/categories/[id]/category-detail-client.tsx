@@ -17,6 +17,7 @@ import { PaginationControls } from "@/components/admin/pagination-controls";
 import { DeleteConfirmDialog } from "@/components/admin/delete-confirm-dialog";
 import { CategoryFormDialog } from "@/components/admin/categories/category-form-dialog";
 import { NomineeFormDialog } from "@/components/admin/nominees/nominee-form-dialog";
+import { NomineeDetailDialog } from "@/components/admin/nominees/nominee-detail-dialog";
 import { NomineesTable, NomineesTableHeader } from "@/components/admin/nominees/nominees-table";
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { getCategory, deleteCategories } from "@/lib/api/categories";
@@ -46,6 +47,7 @@ export function CategoryDetailClient({ id }: { id: string }) {
   const isCodeSearch = CODE_PATTERN.test(search.trim());
 
   const [nomineeFormState, setNomineeFormState] = useState<NomineeFormState>(null);
+  const [viewingNominee, setViewingNominee] = useState<Nominee | null>(null);
   const [pendingNomineeDelete, setPendingNomineeDelete] = useState<PendingNomineeDelete>(null);
 
   const {
@@ -256,6 +258,7 @@ export function CategoryDetailClient({ id }: { id: string }) {
               showCategory={false}
               onEdit={(nominee) => setNomineeFormState({ mode: "edit", nominee })}
               onDelete={(nominee) => setPendingNomineeDelete({ kind: "single", nominee })}
+              onView={setViewingNominee}
             />
           </div>
         )}
@@ -290,6 +293,12 @@ export function CategoryDetailClient({ id }: { id: string }) {
           nominee={nomineeFormState.mode === "edit" ? nomineeFormState.nominee : undefined}
         />
       )}
+
+      <NomineeDetailDialog
+        nominee={viewingNominee}
+        open={viewingNominee !== null}
+        onOpenChange={(open) => !open && setViewingNominee(null)}
+      />
 
       <DeleteConfirmDialog
         open={confirmingCategoryDelete}

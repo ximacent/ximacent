@@ -11,7 +11,7 @@ export interface AuthedRequest extends NextRequest {
 
 export type AuthedHandler = (
   req: AuthedRequest,
-  context?: { params: Record<string, string> }
+  context?: { params: Promise<Record<string, string>> }
 ) => Promise<Response> | Response;
 
 interface WithAuthOptions {
@@ -19,7 +19,7 @@ interface WithAuthOptions {
 }
 
 export function withAuth(handler: AuthedHandler, options: WithAuthOptions = {}) {
-  return async (req: NextRequest, context?: { params: Record<string, string> }) => {
+  return async (req: NextRequest, context?: { params: Promise<Record<string, string>> }) => {
     try {
       const authHeader = req.headers.get("authorization");
 
