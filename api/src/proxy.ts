@@ -1,5 +1,5 @@
 //for development
-// import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 // const allowedOrigins = new Set([
 //   "http://localhost:3001",
@@ -42,12 +42,10 @@
 
 
 // for production
-import { NextRequest, NextResponse } from "next/server";
-
 const allowedOrigins = new Set([
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-  "https://yesvote.vercel.app/",
+  "https://yesvote.vercel.app",
 ]);
 
 function corsHeaders(origin: string | null) {
@@ -60,7 +58,7 @@ function corsHeaders(origin: string | null) {
 
   headers.set(
     "Access-Control-Allow-Methods",
-    "GET, POST, PATCH, DELETE, OPTIONS"
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
   );
 
   headers.set(
@@ -77,14 +75,21 @@ export function proxy(request: NextRequest) {
   const headers = corsHeaders(request.headers.get("origin"));
 
   if (request.method === "OPTIONS") {
-    return new NextResponse(null, { status: 204, headers });
+    return new NextResponse(null, {
+      status: 204,
+      headers,
+    });
   }
 
   const response = NextResponse.next();
 
-  headers.forEach((value, key) => response.headers.set(key, value));
+  headers.forEach((value, key) => {
+    response.headers.set(key, value);
+  });
 
   return response;
 }
 
-export const config = { matcher: "/api/:path*" };
+export const config = {
+  matcher: "/api/:path*",
+};
