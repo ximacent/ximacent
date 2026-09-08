@@ -76,9 +76,15 @@ export function ActiveElectionsSection() {
         {data && data.elections.length === 0 && (
           <div className="surface-card p-10 text-center">
             <p className="text-cream-muted">
-              {debouncedSearch
-                ? `No active elections match "${debouncedSearch}".`
-                : "No elections are open for voting right now — check back soon."}
+              {debouncedSearch ? (
+                `No active elections match "${debouncedSearch}".`
+              ) : (
+                <>
+                  No elections are open for voting right now.
+                  <br />
+                  Check back soon...
+                </>
+              )}
             </p>
           </div>
         )}
