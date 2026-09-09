@@ -1,6 +1,6 @@
 "use client";
 
-import { BadgeCheck, Barcode, Layers3, UserRound } from "lucide-react";
+import { BadgeCheck, Barcode, Layers3, Trophy, UserRound } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -88,6 +88,15 @@ export function NomineeDetailDialog({
               </div>
               <p className="mt-3 break-words text-lg font-medium leading-6 text-cream">
                 {nominee.category?.name ?? "Unassigned"}
+              </p>
+            </div>
+            <div className="rounded-lg border border-border/70 bg-secondary/45 p-4 transition-colors hover:border-champagne/30 sm:col-span-2">
+              <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-stone">
+                <Trophy className="h-4 w-4 text-champagne" />
+                <span>Election</span>
+              </div>
+              <p className="mt-3 break-words text-lg font-medium leading-6 text-cream">
+                {nominee.category?.election?.title ?? "Unassigned"}
               </p>
             </div>
           </section>

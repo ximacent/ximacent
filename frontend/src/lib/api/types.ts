@@ -76,7 +76,7 @@ export interface Nominee {
   bio: string | null;
   imageUrl: string | null;
   code: string;
-  category?: Pick<Category, "id" | "name">;
+  category?: Pick<Category, "id" | "name" | "election">;
 }
 
 /** Nested shapes expected from GET /public/elections/:idOrSlug */

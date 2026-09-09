@@ -39,7 +39,7 @@ export class NomineeService {
 
       const [nominees, count] = await repo.findAndCount({
         where,
-        relations: { category: true },
+        relations: { category: { election: true } },
         order: { createdAt: "DESC" },
         skip,
         take,
