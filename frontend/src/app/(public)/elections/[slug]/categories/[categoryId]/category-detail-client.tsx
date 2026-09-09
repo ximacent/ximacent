@@ -5,12 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ArrowLeft, Frown, Search, Trophy, X } from "lucide-react";
+import { ArrowLeft, Frown, Search, X } from "lucide-react";
 import { getPublicCategory } from "@/lib/api/elections";
 import { NomineeCard } from "@/components/nominees/nominee-card";
 import { ElectionStatusBadge } from "@/components/elections/election-status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { LiveResultsLink } from "@/components/elections/live-results-link";
 import { Input } from "@/components/ui/input";
 import { mediaUrl } from "@/lib/utils";
 import { ElectionBannerFallback } from "@/components/elections/election-banner-fallback";
@@ -120,17 +121,9 @@ export function CategoryDetailClient({
               </p>
             )}
 
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="mt-6 border-champagne/35 bg-ink/35 text-champagne shadow-soft hover:border-champagne/60 hover:bg-champagne/10 hover:text-champagne-soft active:bg-champagne/15"
-            >
-              <Link href={`/elections/${slug}/results`}>
-                <Trophy className="h-4 w-4" />
-                View live results
-              </Link>
-            </Button>
+            <div className="mt-6">
+              <LiveResultsLink slug={slug} />
+            </div>
           </motion.div>
         </div>
       </section>

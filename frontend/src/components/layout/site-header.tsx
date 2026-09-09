@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,47 @@ const navLinks = [
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (pathname !== "/") {
+      setActiveSection(null);
+      return;
+    }
+
+    const updateFromHash = () => {
+      setActiveSection(window.location.hash === "#how-it-works" ? "how-it-works" : null);
+    };
+
+    updateFromHash();
+    window.addEventListener("hashchange", updateFromHash);
+
+    const section = document.getElementById("how-it-works");
+    if (!section) {
+      return () => window.removeEventListener("hashchange", updateFromHash);
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setActiveSection("how-it-works");
+        } else if (window.scrollY < section.offsetTop - 96) {
+          setActiveSection(null);
+        }
+      },
+      { rootMargin: "-20% 0px -65%", threshold: 0 }
+    );
+    observer.observe(section);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("hashchange", updateFromHash);
+    };
+  }, [pathname]);
+
+  const isHowItWorksActive = pathname === "/" && activeSection === "how-it-works";
+  const isElectionsActive =
+    (pathname === "/" || pathname.startsWith("/elections")) && !isHowItWorksActive;
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/50 bg-ink/80 backdrop-blur-md">
@@ -36,18 +77,20 @@ export function SiteHeader() {
 
         <nav className="hidden items-center gap-1 md:flex">
           {navLinks.map((link) => {
-            const active =
-              link.href === "/"
-                ? pathname === "/"
-                : pathname.startsWith(link.href.split("#")[0] || link.href);
+            const active = link.href === "/"
+              ? isElectionsActive
+              : link.href.includes("#how-it-works")
+                ? isHowItWorksActive
+                : pathname.startsWith(link.href);
             return (
               <Link
                 key={link.href}
                 href={link.href}
+                aria-current={active ? "page" : undefined}
                 className={cn(
-                  "rounded-md px-3 py-2 text-sm font-medium transition-colors focus-ring",
+                  "rounded-md border-b-2 border-transparent px-3 py-2 text-sm font-medium transition-colors focus-ring",
                   active
-                    ? "text-champagne"
+                    ? "border-champagne/70 bg-champagne/5 font-semibold text-champagne"
                     : "text-stone hover:text-cream"
                 )}
               >
@@ -82,16 +125,29 @@ export function SiteHeader() {
             className="overflow-hidden border-t border-border/50 md:hidden"
           >
             <nav className="container flex flex-col gap-1 py-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setOpen(false)}
-                  className="rounded-md px-3 py-3 text-base font-medium text-cream hover:bg-secondary hover:text-champagne"
-                >
-                  {link.label}
-                </Link>
-              ))}
+              {navLinks.map((link) => {
+                const active = link.href === "/"
+                  ? isElectionsActive
+                  : link.href.includes("#how-it-works")
+                    ? isHowItWorksActive
+                    : pathname.startsWith(link.href);
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setOpen(false)}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "rounded-md px-3 py-3 text-base font-medium transition-colors focus-ring",
+                      active
+                        ? "bg-champagne/10 text-champagne"
+                        : "text-cream hover:bg-secondary hover:text-champagne"
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
               <Button asChild className="mt-2 w-full">
                 <Link href="/" onClick={() => setOpen(false)}>
                   Vote now

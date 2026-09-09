@@ -51,6 +51,48 @@ function ActivityList({ data }: { data: DashboardData["votingActivity"] }) {
   return <div className="space-y-4">{data.slice(-7).map((item) => <div key={item.date}><div className="mb-1.5 flex justify-between text-xs"><span className="text-stone">{formatDate(item.date)}</span><span className="font-medium text-cream">{compact(item.votes)} votes</span></div><div className="h-2 overflow-hidden rounded-full bg-secondary"><div className="h-full rounded-full bg-rose/80" style={{ width: `${Math.max((item.votes / max) * 100, 3)}%` }} /></div></div>)}</div>;
 }
 
+function AttentionList({ items }: { items: DashboardData["attentionItems"] }) {
+  return (
+    <div className="surface-card overflow-hidden">
+      <div className="flex items-center justify-between gap-3 border-b border-border/50 px-4 py-3">
+        <p className="text-xs text-stone">
+          {items.length.toLocaleString("en-US")} {items.length === 1 ? "item" : "items"}
+        </p>
+        {items.length > 4 && <p className="text-[11px] text-stone">Scroll to view all</p>}
+      </div>
+      <div
+        tabIndex={0}
+        role="region"
+        aria-label="Dashboard items needing attention"
+        className="max-h-[clamp(14rem,45vh,28rem)] overflow-y-auto overscroll-contain divide-y divide-border/50 focus-ring"
+      >
+        {items.map((item) => (
+          <div
+            key={item.type === "stale_pending_payment" ? item.paymentId : item.electionId}
+            className="flex items-start gap-3 p-4"
+          >
+            <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-champagne/10 text-champagne">
+              <AlertTriangle className="h-4 w-4" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-cream">
+                {item.type === "stale_pending_payment"
+                  ? "Pending payment requires attention"
+                  : "Active election has no votes"}
+              </p>
+              <p className="mt-1 text-xs text-stone">
+                {item.type === "stale_pending_payment"
+                  ? `Reference ${item.reference} · Created ${formatDateTime(item.createdAt)}`
+                  : `${item.title} ends ${formatDate(item.endDate)}`}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboardPage() {
   const { user } = useAuth();
   const { data, isLoading, isError, isFetching, refetch } = useQuery({ queryKey: ["admin-dashboard"], queryFn: getDashboard, staleTime: 60_000, refetchOnWindowFocus: false });
@@ -69,6 +111,6 @@ export default function AdminDashboardPage() {
 
     <div className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]"><section><SectionHeading eyebrow="Leaderboard" title="Top nominees" href="/admin/nominees" linkLabel="Manage nominees" />{data.topNominees.length === 0 ? <div className="surface-card"><EmptyState icon={UserRound} title="No nominee results yet" description="Nominee rankings will appear after votes are recorded." /></div> : <div className="surface-card divide-y divide-border/50">{data.topNominees.slice(0, 5).map((nominee, index) => { const image = mediaUrl(nominee.imageUrl); return <div key={nominee.id} className="flex items-center gap-3 p-4"><span className="w-5 text-center font-display text-lg text-champagne">{index + 1}</span><div className="h-11 w-11 shrink-0 overflow-hidden rounded-md bg-secondary">{image ? <img src={image} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full items-center justify-center"><UserRound className="h-4 w-4 text-stone" /></div>}</div><div className="min-w-0 flex-1"><p className="truncate font-medium text-cream">{nominee.name}</p><p className="truncate text-xs text-stone">{nominee.category.name} · {nominee.election.title}</p></div><div className="text-right"><p className="font-medium text-cream">{compact(nominee.totalVotes)}</p><p className="text-[11px] text-stone">votes</p></div></div>; })}</div>}</section><section><SectionHeading eyebrow="Coming up" title="Upcoming elections" />{data.upcomingElections.length === 0 ? <div className="surface-card"><EmptyState icon={CalendarClock} title="Nothing scheduled" description="Upcoming elections will appear here." /></div> : <div className="surface-card divide-y divide-border/50">{data.upcomingElections.map((election) => <Link key={election.id} href={`/admin/elections/${election.id}/edit`} className="flex items-center gap-3 p-4 transition hover:bg-secondary/30"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-champagne/10 text-champagne"><CalendarClock className="h-4 w-4" /></span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-medium text-cream">{election.title}</span><span className="mt-1 block text-xs text-stone">Starts {formatDateTime(election.startDate)}</span></span><ArrowRight className="h-4 w-4 text-stone" /></Link>)}</div>}</section></div>
 
-    <div className="mt-10 grid gap-6 lg:grid-cols-2"><section><SectionHeading eyebrow="Attention" title="Needs attention" />{data.attentionItems.length === 0 ? <div className="surface-card"><EmptyState icon={CheckCircle2} title="All clear" description="There are no outstanding dashboard alerts." /></div> : <div className="surface-card divide-y divide-border/50">{data.attentionItems.map((item) => <div key={item.type === "stale_pending_payment" ? item.paymentId : item.electionId} className="flex items-start gap-3 p-4"><span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-champagne/10 text-champagne"><AlertTriangle className="h-4 w-4" /></span><div><p className="text-sm font-medium text-cream">{item.type === "stale_pending_payment" ? "Pending payment requires attention" : "Active election has no votes"}</p><p className="mt-1 text-xs text-stone">{item.type === "stale_pending_payment" ? `Reference ${item.reference} · Created ${formatDateTime(item.createdAt)}` : `${item.title} ends ${formatDate(item.endDate)}`}</p></div></div>)}</div>}</section><section><SectionHeading eyebrow="Platform" title="Inventory at a glance" /><div className="surface-card grid grid-cols-2 gap-px overflow-hidden bg-border/50"><div className="bg-card p-5"><Layers className="h-4 w-4 text-champagne" /><p className="mt-4 font-display text-2xl text-cream">{overview.totalCategories}</p><p className="text-xs text-stone">Categories</p></div><div className="bg-card p-5"><Trophy className="h-4 w-4 text-champagne" /><p className="mt-4 font-display text-2xl text-cream">{overview.totalElections}</p><p className="text-xs text-stone">Total elections</p></div><div className="bg-card p-5"><UsersRound className="h-4 w-4 text-champagne" /><p className="mt-4 font-display text-2xl text-cream">{compact(overview.totalVotes)}</p><p className="text-xs text-stone">Votes recorded</p></div><div className="bg-card p-5"><CircleDollarSign className="h-4 w-4 text-champagne" /><p className="mt-4 font-display text-2xl text-cream">{formatMoney(overview.totalRevenue)}</p><p className="text-xs text-stone">Revenue to date</p></div></div></section></div>
+    <div className="mt-10 grid gap-6 lg:grid-cols-2"><section><SectionHeading eyebrow="Attention" title="Needs attention" />{data.attentionItems.length === 0 ? <div className="surface-card"><EmptyState icon={CheckCircle2} title="All clear" description="There are no outstanding dashboard alerts." /></div> : <AttentionList items={data.attentionItems} />}</section><section><SectionHeading eyebrow="Platform" title="Inventory at a glance" /><div className="surface-card grid grid-cols-2 gap-px overflow-hidden bg-border/50"><div className="bg-card p-5"><Layers className="h-4 w-4 text-champagne" /><p className="mt-4 font-display text-2xl text-cream">{overview.totalCategories}</p><p className="text-xs text-stone">Categories</p></div><div className="bg-card p-5"><Trophy className="h-4 w-4 text-champagne" /><p className="mt-4 font-display text-2xl text-cream">{overview.totalElections}</p><p className="text-xs text-stone">Total elections</p></div><div className="bg-card p-5"><UsersRound className="h-4 w-4 text-champagne" /><p className="mt-4 font-display text-2xl text-cream">{compact(overview.totalVotes)}</p><p className="text-xs text-stone">Votes recorded</p></div><div className="bg-card p-5"><CircleDollarSign className="h-4 w-4 text-champagne" /><p className="mt-4 font-display text-2xl text-cream">{formatMoney(overview.totalRevenue)}</p><p className="text-xs text-stone">Revenue to date</p></div></div></section></div>
   </div>;
 }

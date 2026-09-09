@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ArrowLeft, Calendar, Coins, Frown, Search, Trophy, X } from "lucide-react";
+import { ArrowLeft, Calendar, Coins, Frown, Search, X } from "lucide-react";
 import { getPublicElection } from "@/lib/api/elections";
 import { ElectionStatusBadge } from "@/components/elections/election-status-badge";
 import { CategoryCard } from "@/components/categories/category-card";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { mediaUrl } from "@/lib/utils";
 import { ElectionBannerFallback } from "@/components/elections/election-banner-fallback";
+import { LiveResultsLink } from "@/components/elections/live-results-link";
 
 function formatDateRange(start: string, end: string): string {
   const s = new Date(start);
@@ -134,13 +135,7 @@ export function ElectionDetailClient({ slug }: { slug: string }) {
                 <Coins className="h-4 w-4" />
                 GHS {election.pricePerVote} per vote
               </span>
-              <Link
-                href={`/elections/${election.slug}/results`}
-                className="focus-ring inline-flex items-center gap-1.5 rounded text-champagne hover:text-champagne-soft"
-              >
-                <Trophy className="h-4 w-4" />
-                View live results
-              </Link>
+              <LiveResultsLink slug={election.slug} />
             </div>
           </motion.div>
         </div>
