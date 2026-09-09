@@ -120,13 +120,17 @@ export function CategoryDetailClient({
               </p>
             )}
 
-            <Link
-              href={`/elections/${slug}/results`}
-              className="focus-ring mt-6 inline-flex items-center gap-1.5 rounded text-sm text-champagne hover:text-champagne-soft"
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="mt-6 border-champagne/35 bg-ink/35 text-champagne shadow-soft hover:border-champagne/60 hover:bg-champagne/10 hover:text-champagne-soft active:bg-champagne/15"
             >
-              <Trophy className="h-4 w-4" />
-              View live results
-            </Link>
+              <Link href={`/elections/${slug}/results`}>
+                <Trophy className="h-4 w-4" />
+                View live results
+              </Link>
+            </Button>
           </motion.div>
         </div>
       </section>

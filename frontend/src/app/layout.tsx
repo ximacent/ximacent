@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Outfit } from "next/font/google";
 import { Providers } from "@/components/providers";
-import { SiteShell } from "@/components/layout/site-shell";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -32,9 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${fraunces.variable} ${outfit.variable} h-full dark`}
     >
       <body className="min-h-full font-sans antialiased">
-        <Providers>
-          <SiteShell>{children}</SiteShell>
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
