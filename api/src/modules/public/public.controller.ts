@@ -21,4 +21,9 @@ export class PublicController {
   static async getNomineePublicProfile(id: string) {
     return await PublicService.getNomineePublicProfile(id);
   }
+
+  static async getNomineeByCode(code: string) {
+    return await PublicService.getNomineeByCode(code);
+  }
+
 }

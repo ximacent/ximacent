@@ -1,5 +1,12 @@
 import { apiClient, apiClientWithQuery } from "./client";
-import type { Nominee, NomineeVotes, Pagination, PaginationQuery, PublicNominee } from "./types";
+import type {
+  Nominee,
+  NomineeByCodeResult,
+  NomineeVotes,
+  Pagination,
+  PaginationQuery,
+  PublicNominee,
+} from "./types";
 
 export interface ListNomineesParams extends PaginationQuery {
   name?: string;
@@ -64,6 +71,13 @@ export function getNomineeVotes(id: string) {
   return apiClient<NomineeVotes>(`/api/v1/nominees/${id}/votes`, {
     public: true,
   });
+}
+
+export function getNomineeByCode(code: string) {
+  return apiClient<NomineeByCodeResult>(
+    `/api/v1/public/nominees/code/${encodeURIComponent(code)}`,
+    { public: true }
+  );
 }
 
 /**

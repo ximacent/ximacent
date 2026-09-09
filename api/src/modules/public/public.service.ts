@@ -237,4 +237,45 @@ export class PublicService {
       },
     };
   }
+
+  static async getNomineeByCode(code: string) {
+    if (!code?.trim()) {
+      throw new CustomAppError( "Nominee code is required", 400, ErrorCodes.ID_REQUIRED.code, ErrorCodes.ID_REQUIRED.label, "bad_request" );
+    }
+
+    const db = await AppDataSource();
+
+    const nominee = await db.getRepository(Nominee).findOne({
+      where: { code: code.trim().toUpperCase(), isDeleted: false },
+      relations: { category: { election: true } },
+      select: {
+        id: true, name: true, bio: true, imageUrl: true, code: true,
+        category: {
+          id: true, name: true,
+          election: { id: true, title: true, slug: true, status: true, pricePerVote: true },
+        },
+      },
+    });
+
+    if (!nominee || nominee.category.election.status === ElectionStatus.DRAFT) {
+      throw new CustomAppError( "No nominee found with this code", 404, ErrorCodes.RECORD_NOT_FOUND.code, ErrorCodes.RECORD_NOT_FOUND.label, "nominee_not_found" );
+    }
+
+    return {
+      id: nominee.id,
+      name: nominee.name,
+      bio: nominee.bio,
+      imageUrl: nominee.imageUrl,
+      code: nominee.code,
+      category: { id: nominee.category.id, name: nominee.category.name },
+      election: {
+        id: nominee.category.election.id,
+        title: nominee.category.election.title,
+        slug: nominee.category.election.slug,
+        status: nominee.category.election.status,
+        pricePerVote: nominee.category.election.pricePerVote,
+      },
+    };
+  }
+
 }

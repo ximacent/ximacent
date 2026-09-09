@@ -7,16 +7,17 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { VoteByCodeDialog } from "@/components/layout/vote-by-code-dialog";
 
 const navLinks = [
   { href: "/", label: "Elections" },
   { href: "/#how-it-works", label: "How it works" },
-  { href: "/admin/login", label: "Admin" },
 ];
 
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [voteCodeOpen, setVoteCodeOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
   useEffect(() => {
@@ -99,7 +100,13 @@ export function SiteHeader() {
             );
           })}
           <Button asChild size="sm" className="ml-3">
-            <Link href="/">Vote now</Link>
+            <button
+              type="button"
+              onClick={() => setVoteCodeOpen(true)}
+              aria-haspopup="dialog"
+            >
+              Vote now
+            </button>
           </Button>
         </nav>
 
@@ -148,15 +155,23 @@ export function SiteHeader() {
                   </Link>
                 );
               })}
-              <Button asChild className="mt-2 w-full">
-                <Link href="/" onClick={() => setOpen(false)}>
-                  Vote now
-                </Link>
+              <Button
+                type="button"
+                className="mt-2 w-full"
+                onClick={() => {
+                  setOpen(false);
+                  setVoteCodeOpen(true);
+                }}
+                aria-haspopup="dialog"
+              >
+                Vote now
               </Button>
             </nav>
           </motion.div>
         )}
       </AnimatePresence>
+
+      <VoteByCodeDialog open={voteCodeOpen} onOpenChange={setVoteCodeOpen} />
     </header>
   );
 }

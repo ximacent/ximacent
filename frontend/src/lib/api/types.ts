@@ -88,6 +88,17 @@ export interface PublicNominee {
   code: string;
 }
 
+export interface NomineeByCodeResult extends PublicNominee {
+  category: { id: string; name: string };
+  election: {
+    id: string;
+    title: string;
+    slug: string;
+    status: ElectionStatus;
+    pricePerVote: string;
+  };
+}
+
 export interface PublicCategory {
   id: string;
   name: string;

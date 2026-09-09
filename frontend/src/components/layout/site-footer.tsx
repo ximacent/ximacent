@@ -14,7 +14,7 @@ export function SiteFooter() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-8 sm:gap-12">
+        <div className="grid gap-8 sm:gap-12">
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wider text-champagne">
               Explore
@@ -28,18 +28,6 @@ export function SiteFooter() {
               <li>
                 <Link href="/#how-it-works" className="transition hover:text-cream">
                   How voting works
-                </Link>
-              </li>
-            </ul>
-          </div>
-          <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-wider text-champagne">
-              Operators
-            </p>
-            <ul className="space-y-2 text-sm text-stone">
-              <li>
-                <Link href="/admin/login" className="transition hover:text-cream">
-                  Admin sign in
                 </Link>
               </li>
             </ul>
