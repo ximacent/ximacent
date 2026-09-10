@@ -10,6 +10,10 @@ export class PublicController {
     return await PublicService.getUpcomingElections(query);
   }
 
+  static async getPastElections(query: PaginationQuery) {
+    return await PublicService.getPastElections(query);
+  }
+
   static async getElectionDetail(idOrSlug: string) {
     return await PublicService.getElectionDetail(idOrSlug);
   }

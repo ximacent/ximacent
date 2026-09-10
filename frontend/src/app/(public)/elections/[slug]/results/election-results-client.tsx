@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { ArrowLeft, Frown, RefreshCw, Trophy } from "lucide-react";
 import { getPublicElection } from "@/lib/api/elections";
+import type { PublicElectionDetail } from "@/lib/api/types";
 import { getElectionResults } from "@/lib/api/elections";
 import { CategoryLeaderboard } from "@/components/results/category-leaderboard";
 import { ElectionStatusBadge } from "@/components/elections/election-status-badge";
@@ -14,7 +15,7 @@ import { Button } from "@/components/ui/button";
 // people actually watch update live during an event.
 const RESULTS_REFRESH_MS = 15000;
 
-export function ElectionResultsClient({ slug }: { slug: string }) {
+export function ElectionResultsClient({ slug, initialElection }: { slug: string; initialElection?: PublicElectionDetail }) {
   const {
     data: election,
     isLoading: electionLoading,
@@ -22,6 +23,7 @@ export function ElectionResultsClient({ slug }: { slug: string }) {
   } = useQuery({
     queryKey: ["public-election", slug],
     queryFn: () => getPublicElection(slug),
+    initialData: initialElection,
     staleTime: 60_000,
   });
 

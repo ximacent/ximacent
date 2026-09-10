@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { PaymentStatusClient } from "./payment-status-client";
 
-export const metadata: Metadata = { title: "Confirming your vote" };
+export const metadata: Metadata = {
+  title: "Confirming your vote",
+  robots: { index: false, follow: false },
+};
 
 type Props = { searchParams: Promise<{ reference?: string }> };
 

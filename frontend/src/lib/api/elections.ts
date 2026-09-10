@@ -120,6 +120,15 @@ export function listUpcomingElections(params: PaginationQuery = {}) {
   );
 }
 
+/** Public — past (closed) elections. Supports title search. No auth. */
+export function listPastElections(params: ListPublicElectionsParams = {}) {
+  return apiClientWithQuery<ListPublicElectionsResponse>(
+    "/api/v1/public/elections/past",
+    params,
+    { public: true }
+  );
+}
+
 /** Public election detail with categories + nominees, by id or slug. No auth. */
 export function getPublicElection(idOrSlug: string) {
   return apiClient<import("./types").PublicElectionDetail>(

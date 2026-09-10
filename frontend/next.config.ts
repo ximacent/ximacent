@@ -27,6 +27,10 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        source: "/api/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
         source:
           "/.well-known/apple-developer-merchantid-domain-association",
         headers: [

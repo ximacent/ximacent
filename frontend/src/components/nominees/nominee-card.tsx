@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import Image from "next/image";
 import { UserRound, Vote as VoteIcon } from "lucide-react";
 import { mediaUrl } from "@/lib/utils";
@@ -64,7 +65,11 @@ export function NomineeCard({
         </div>
 
         <div className="flex flex-1 flex-col p-5">
-          <h3 className="font-display text-lg text-cream">{nominee.name}</h3>
+          <h3 className="font-display text-lg text-cream">
+            <Link href={`/nominees/${encodeURIComponent(nominee.code)}`} className="focus-ring rounded hover:text-champagne">
+              {nominee.name}
+            </Link>
+          </h3>
           <p
             className={`mt-1.5 line-clamp-2 flex-1 text-sm leading-relaxed ${
               nominee.bio ? "text-stone" : "text-stone/70 italic"

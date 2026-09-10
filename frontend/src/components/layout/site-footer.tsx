@@ -30,6 +30,26 @@ export function SiteFooter() {
                   How voting works
                 </Link>
               </li>
+              <li>
+                <Link href="/online-voting" className="focus-ring rounded-sm transition hover:text-cream">
+                  Online voting platform
+                </Link>
+              </li>
+              <li>
+                <Link href="/online-awards-voting" className="focus-ring rounded-sm transition hover:text-cream">
+                  Awards voting
+                </Link>
+              </li>
+              <li>
+                <Link href="/online-election-voting" className="focus-ring rounded-sm transition hover:text-cream">
+                  Election voting
+                </Link>
+              </li>
+              <li>
+                <Link href="/voting-platform-ghana" className="focus-ring rounded-sm transition hover:text-cream">
+                  Voting platform Ghana
+                </Link>
+              </li>
             </ul>
           </div>
         </div>

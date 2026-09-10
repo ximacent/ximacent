@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Calendar, Coins, Frown, Search, X } from "lucide-react";
 import { getPublicElection } from "@/lib/api/elections";
+import type { PublicElectionDetail } from "@/lib/api/types";
 import { ElectionStatusBadge } from "@/components/elections/election-status-badge";
 import { CategoryCard } from "@/components/categories/category-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,10 +23,11 @@ function formatDateRange(start: string, end: string): string {
   return `${s.toLocaleDateString("en-US", fmt)} – ${e.toLocaleDateString("en-US", fmt)}`;
 }
 
-export function ElectionDetailClient({ slug }: { slug: string }) {
+export function ElectionDetailClient({ slug, initialElection }: { slug: string; initialElection?: PublicElectionDetail }) {
   const { data: election, isLoading, isError, refetch } = useQuery({
     queryKey: ["public-election", slug],
     queryFn: () => getPublicElection(slug),
+    initialData: initialElection,
     staleTime: 60_000,
   });
 

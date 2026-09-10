@@ -15,9 +15,9 @@ export function CategoryLeaderboard({
   const content = (
     <>
       <div className="mb-5 flex items-baseline justify-between gap-3">
-        <h3 className="font-display text-xl text-cream md:text-2xl">
+        <h2 className="font-display text-xl text-cream md:text-2xl">
           {results.category.name}
-        </h3>
+        </h2>
         <span className="whitespace-nowrap text-sm text-stone">
           {results.totalVotes.toLocaleString()} total votes
         </span>

@@ -67,6 +67,36 @@ export class PublicService {
   }
 
   /**
+   * Closed elections — same shape as getActiveElections, for any UI that
+   * wants a paginated "past elections" list (e.g. an archive/results page).
+   */
+  static async getPastElections(query: PaginationQuery & { title?: string }) {
+    const db = await AppDataSource();
+    const repo = db.getRepository(Election);
+
+    const where: FindOptionsWhere<Election> = { status: ElectionStatus.CLOSED, isDeleted: false };
+    if (query.title) where.title = ILike(`%${query.title}%`);
+
+    const { page, limit, skip, take } = parsePagination({
+      page: query.page?.toString(),
+      limit: query.limit?.toString(),
+    });
+
+    const [elections, count] = await repo.findAndCount({
+      where,
+      select: {
+        id: true, title: true, alias: true, slug: true, description: true,
+        startDate: true, endDate: true, pricePerVote: true, status: true, bannerUrl: true,
+      },
+      order: { endDate: "DESC" }, // most recently closed first
+      skip,
+      take,
+    });
+
+    return { elections, pagination: buildPaginationMeta(count, page, limit) };
+  }
+
+  /**
    * Full election detail with its live categories/nominees, for the voting page.
    * Accepts either a real id or the slug, so the frontend can use pretty URLs.
    *

@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft, Frown, Search, X } from "lucide-react";
 import { getPublicCategory } from "@/lib/api/elections";
+import type { PublicCategoryDetail } from "@/lib/api/types";
 import { NomineeCard } from "@/components/nominees/nominee-card";
 import { ElectionStatusBadge } from "@/components/elections/election-status-badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,13 +19,16 @@ import { ElectionBannerFallback } from "@/components/elections/election-banner-f
 export function CategoryDetailClient({
   slug,
   categoryId,
+  initialCategory,
 }: {
   slug: string;
   categoryId: string;
+  initialCategory?: PublicCategoryDetail;
 }) {
   const { data: category, isLoading, isError, refetch } = useQuery({
     queryKey: ["public-category", categoryId],
     queryFn: () => getPublicCategory(categoryId),
+    initialData: initialCategory,
     staleTime: 60_000,
   });
 

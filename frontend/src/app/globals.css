@@ -76,4 +76,18 @@
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
+
+  /* Keep dashboard previews compact so lower-priority sections stay reachable. */
+  .dashboard-page > .mt-10:nth-child(5) > section > .surface-card {
+    max-height: clamp(16rem, 45vh, 32rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .dashboard-page p.truncate {
+    overflow: visible;
+    overflow-wrap: anywhere;
+    text-overflow: clip;
+    white-space: normal;
+  }
 }
