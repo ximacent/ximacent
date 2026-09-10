@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 // const allowedOrigins = new Set([
 //   "http://localhost:3001",
-//   "https://sjnm15x5-3001.uks1.devtunnels.ms"
+//   "https://sjnm15x5-3001.uks1.devtunnels.ms",
 // ]);
 
 // export function proxy(request: NextRequest) {

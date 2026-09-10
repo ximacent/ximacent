@@ -119,7 +119,7 @@ export function VoteDialog({
                 variant="outline"
                 size="icon"
                 onClick={() => adjustQuantity(-1)}
-                disabled={quantity <= 1 || isPending}
+                disabled={quantity === "" || quantity <= 1 || isPending}
                 aria-label="Decrease votes"
               >
                 <Minus className="h-4 w-4" />

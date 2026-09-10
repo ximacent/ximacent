@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getPaymentStatus, confirmPayment } from "@/lib/api/payments";
