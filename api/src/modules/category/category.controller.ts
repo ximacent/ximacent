@@ -1,5 +1,5 @@
 import { CategoryService } from "./category.service";
-import type { CreateCategoryDTO, UpdateCategoryDTO, FilterCategoryDTO, } from "@/types/category.type";
+import type { CreateCategoryDTO, UpdateCategoryDTO, FilterCategoryDTO } from "@/types/category.type";
 
 export class CategoryController {
   static async getCategories(data: FilterCategoryDTO) {
@@ -10,8 +10,10 @@ export class CategoryController {
     return await CategoryService.getCategory(id);
   }
 
-  static async createCategory(data: CreateCategoryDTO) {
-    return await CategoryService.create(data);
+  static async createCategory(data: CreateCategoryDTO | CreateCategoryDTO[]) {
+    return Array.isArray(data)
+      ? await CategoryService.createMany(data)
+      : await CategoryService.create(data);
   }
 
   static async updateCategory(id: string, data: UpdateCategoryDTO) {

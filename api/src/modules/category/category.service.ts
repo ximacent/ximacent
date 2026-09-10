@@ -1,4 +1,4 @@
-import { validateCreateCategory, validateUpdateCategory } from "@/modules/category/category.validator";
+import { validateCreateCategory, validateCreateCategoryBatch, validateUpdateCategory } from "@/modules/category/category.validator";
 import { validate as isUUID } from "uuid";
 import { FindOptionsWhere, ILike, In, Not } from "typeorm";
 import { AppDataSource } from "@/database/data-source";
@@ -103,6 +103,63 @@ export class CategoryService {
     });
 
     return await repo.save(newCategory);
+  }
+
+  /**
+   * Creates multiple categories atomically — either all succeed or none do.
+   * Runs inside a single transaction so a failure partway through (a bad
+   * electionId on item 4 of 5, say) never leaves a half-created batch.
+   */
+  static async createMany(data: CreateCategoryDTO[]) {
+    validateCreateCategoryBatch(data);
+
+    const db = await AppDataSource();
+
+    return await db.transaction(async (manager) => {
+      const categoryRepo = manager.getRepository(Category);
+      const electionRepo = manager.getRepository(Election);
+
+      // Fetch each distinct election exactly once, not once per category —
+      // avoids N duplicate lookups when several categories share an election
+      // (the common case: setting up one pageant's full category list).
+      const uniqueElectionIds = [...new Set(data.map((d) => d.electionId))];
+      const elections = await electionRepo.find({
+        where: { id: In(uniqueElectionIds), isDeleted: false },
+      });
+      const electionMap = new Map(elections.map((e) => [e.id, e]));
+
+      const missingId = uniqueElectionIds.find((id) => !electionMap.has(id));
+      if (missingId) {
+        throw new CustomAppError( `No election found with electionId "${missingId}"`, 404, ErrorCodes.RECORD_NOT_FOUND.code, ErrorCodes.RECORD_NOT_FOUND.label, "election_not_found" );
+      }
+
+      // Check existing DB duplicates for every (name, electionId) pair in
+      // one query rather than one query per item.
+      const existing = await categoryRepo.find({
+        where: data.map((d) => ({
+          name: d.name.trim(),
+          election: { id: d.electionId },
+          isDeleted: false,
+        })),
+        relations: { election: true },
+      });
+
+      if (existing.length > 0) {
+        const first = existing[0];
+        throw new CustomAppError( `Category "${first.name}" already exists for this election`, 400, ErrorCodes.RECORD_ALREADY_EXISTS.code, ErrorCodes.RECORD_ALREADY_EXISTS.label, "category_exists" );
+      }
+
+      const newCategories = data.map((item) =>
+        categoryRepo.create({
+          name: item.name.trim(),
+          description: item.description?.trim(),
+          displayOrder: item.displayOrder ?? 0,
+          election: electionMap.get(item.electionId)!,
+        })
+      );
+
+      return await categoryRepo.save(newCategories);
+    });
   }
 
   static async update(id: string, data: UpdateCategoryDTO) {
