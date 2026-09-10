@@ -1,8 +1,5 @@
-"use client";
-
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import { ArrowUpRight, Users } from "lucide-react";
 import type { PublicCategory } from "@/lib/api/types";
 import { mediaUrl } from "@/lib/utils";
@@ -24,26 +21,22 @@ export function CategoryCard({
   const bannerSrc = mediaUrl(bannerUrl);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 14 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-30px" }}
-      transition={{ delay: index * 0.05, duration: 0.35, ease: "easeOut" }}
+    <div
+      className="animate-fade-up h-full"
+      style={{ animationDelay: `${index * 50}ms` }}
     >
       <Link
         href={`/elections/${electionSlug}/categories/${category.id}`}
-        className="group focus-ring block overflow-hidden rounded-lg"
+        className="group focus-ring block h-full overflow-hidden rounded-lg"
       >
-        <article className="relative flex h-full flex-col justify-between overflow-hidden rounded-lg border border-white/10 p-6 shadow-soft ring-1 ring-black/20 transition duration-300 hover:-translate-y-1 hover:border-champagne/40 hover:shadow-elevated">
-          {/* Background layer — same footprint as the card itself, not a
-              separate image block, so the card's size never changes. */}
+        <article className="relative flex h-full min-h-[11rem] flex-col justify-between overflow-hidden rounded-lg border border-white/10 p-6 shadow-soft ring-1 ring-black/20 transition duration-300 hover:-translate-y-1 hover:border-champagne/40 hover:shadow-elevated">
           <div className="absolute inset-0 -z-10">
             {bannerSrc ? (
               <Image
                 src={bannerSrc}
                 alt=""
                 fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 className="object-cover transition duration-500 group-hover:scale-105"
               />
             ) : (
@@ -77,6 +70,6 @@ export function CategoryCard({
           </div>
         </article>
       </Link>
-    </motion.div>
+    </div>
   );
 }

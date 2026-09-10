@@ -33,23 +33,21 @@ export function VoteDialog({
   pricePerVote: string;
 }) {
   const router = useRouter();
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState<number | "">(1);
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
 
   const price = Number(pricePerVote);
   // Display-only estimate for the voter's convenience. The real, authoritative
   // amount is always computed server-side — this preview must never be sent
   // to the API or trusted as the actual charge.
-  const estimatedTotal = (price * quantity).toFixed(2);
+  const estimatedTotal = (price * (quantity || 0)).toFixed(2);
 
   const { mutate, isPending } = useMutation({
     mutationFn: () =>
       createPayment({
         nomineeId: nominee.id,
-        quantity,
+        quantity: quantity as number,
         voterEmail: email.trim() || undefined,
-        voterPhone: phone.trim() || undefined,
       }),
     onSuccess: async (data) => {
       // Close OUR dialog BEFORE opening Paystack's popup. Radix's Dialog
@@ -93,7 +91,10 @@ export function VoteDialog({
   });
 
   function adjustQuantity(delta: number) {
-    setQuantity((q) => Math.max(1, Math.min(999, q + delta)));
+    setQuantity((current) => {
+      const next = (current || 1) + delta;
+      return Math.max(1, Math.min(999, next));
+    });
   }
 
   return (
@@ -111,7 +112,7 @@ export function VoteDialog({
 
         <div className="space-y-5">
           <div>
-            <Label>Number of votes</Label>
+            <Label htmlFor="vote-quantity">Number of votes</Label>
             <div className="mt-2 flex items-center gap-3">
               <Button
                 type="button"
@@ -124,17 +125,25 @@ export function VoteDialog({
                 <Minus className="h-4 w-4" />
               </Button>
               <Input
+                id="vote-quantity"
                 type="number"
                 min={1}
                 max={999}
                 value={quantity}
                 onChange={(e) => {
-                  const n = parseInt(e.target.value, 10);
-                  setQuantity(Number.isFinite(n) ? Math.max(1, Math.min(999, n)) : 1);
+                  const value = e.target.value;
+                  if (value === "") {
+                    setQuantity("");
+                    return;
+                  }
+
+                  const n = Number(value);
+                  if (Number.isInteger(n) && n >= 1 && n <= 999) {
+                    setQuantity(n);
+                  }
                 }}
                 disabled={isPending}
                 className="w-20 text-center"
-                aria-label="Number of votes"
               />
               <Button
                 type="button"
@@ -163,19 +172,6 @@ export function VoteDialog({
                 disabled={isPending}
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="voter-phone" className="text-xs text-stone">
-                Phone <span className="text-stone/70">(optional)</span>
-              </Label>
-              <Input
-                id="voter-phone"
-                type="tel"
-                placeholder="024 xxx xxxx"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                disabled={isPending}
-              />
-            </div>
           </div>
 
           <div className="flex items-center justify-between border-t border-border/50 pt-4">
@@ -185,7 +181,12 @@ export function VoteDialog({
             </span>
           </div>
 
-          <Button className="w-full" size="lg" onClick={() => mutate()} disabled={isPending}>
+          <Button
+            className="min-h-11 w-full"
+            size="lg"
+            onClick={() => mutate()}
+            disabled={isPending || quantity === ""}
+          >
             {isPending ? "Starting checkout…" : "Continue to secure checkout"}
           </Button>
 

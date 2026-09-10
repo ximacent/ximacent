@@ -16,6 +16,7 @@ export function ActiveElectionsSection() {
     queryKey: ["public-elections", { title: debouncedSearch, page: 1, limit: 12 }],
     queryFn: () =>
       listPublicElections({ title: debouncedSearch || undefined, page: 1, limit: 12 }),
+    staleTime: 5 * 60_000,
   });
 
   return (
@@ -44,7 +45,7 @@ export function ActiveElectionsSection() {
               <button
                 onClick={() => setSearch("")}
                 aria-label="Clear search"
-                className="focus-ring absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-stone hover:text-cream"
+                className="focus-ring absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded text-stone hover:text-cream"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -96,7 +97,12 @@ export function ActiveElectionsSection() {
             }`}
           >
             {data.elections.map((election, i) => (
-              <ElectionCard key={election.id} election={election} index={i} />
+              <ElectionCard
+                key={election.id}
+                election={election}
+                index={i}
+                priority={i < 3}
+              />
             ))}
           </div>
         )}

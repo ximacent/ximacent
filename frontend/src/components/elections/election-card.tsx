@@ -1,8 +1,5 @@
-"use client";
-
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import { ArrowUpRight, Calendar, Coins } from "lucide-react";
 import type { Election } from "@/lib/api/types";
 import { mediaUrl } from "@/lib/utils";
@@ -36,15 +33,23 @@ export function ElectionCardSkeleton() {
   );
 }
 
-export function ElectionCard({ election, index = 0 }: { election: Election; index?: number }) {
+const CARD_SIZES = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw";
+
+export function ElectionCard({
+  election,
+  index = 0,
+  priority = false,
+}: {
+  election: Election;
+  index?: number;
+  priority?: boolean;
+}) {
   const bannerSrc = mediaUrl(election.bannerUrl);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ delay: index * 0.06, duration: 0.4, ease: "easeOut" }}
+    <div
+      className="animate-fade-up"
+      style={{ animationDelay: `${index * 60}ms` }}
     >
       <Link
         href={`/elections/${election.slug}`}
@@ -55,9 +60,10 @@ export function ElectionCard({ election, index = 0 }: { election: Election; inde
             {bannerSrc ? (
               <Image
                 src={bannerSrc}
-                alt=""
+                alt={`${election.title} banner`}
                 fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                priority={priority}
+                sizes={CARD_SIZES}
                 className="object-cover transition duration-500 group-hover:scale-105"
               />
             ) : (
@@ -98,7 +104,7 @@ export function ElectionCard({ election, index = 0 }: { election: Election; inde
           </div>
         </article>
       </Link>
-    </motion.div>
+    </div>
   );
 }
 
@@ -118,11 +124,9 @@ export function UpcomingElectionCard({
   const bannerSrc = mediaUrl(election.bannerUrl);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ delay: index * 0.06, duration: 0.4, ease: "easeOut" }}
+    <div
+      className="animate-fade-up"
+      style={{ animationDelay: `${index * 60}ms` }}
     >
       <article
         aria-disabled="true"
@@ -134,7 +138,7 @@ export function UpcomingElectionCard({
               src={bannerSrc}
               alt=""
               fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              sizes={CARD_SIZES}
               className="object-cover"
             />
           ) : (
@@ -168,6 +172,6 @@ export function UpcomingElectionCard({
           </div>
         </div>
       </article>
-    </motion.div>
+    </div>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { ArrowLeft, Frown, RefreshCw, Trophy } from "lucide-react";
 import { getPublicElection } from "@/lib/api/elections";
 import { getElectionResults } from "@/lib/api/elections";
@@ -21,8 +20,9 @@ export function ElectionResultsClient({ slug }: { slug: string }) {
     isLoading: electionLoading,
     isError: electionError,
   } = useQuery({
-    queryKey: ["public-election-meta", slug],
+    queryKey: ["public-election", slug],
     queryFn: () => getPublicElection(slug),
+    staleTime: 60_000,
   });
 
   const {
@@ -71,6 +71,9 @@ export function ElectionResultsClient({ slug }: { slug: string }) {
         <p className="max-w-sm text-stone">
           We couldn&apos;t load results for this election right now.
         </p>
+        <Button variant="outline" onClick={() => refetch()}>
+          Try again
+        </Button>
         <Button asChild>
           <Link href={`/elections/${slug}`}>Back to election</Link>
         </Button>
@@ -94,11 +97,7 @@ export function ElectionResultsClient({ slug }: { slug: string }) {
             Back to election
           </Link>
 
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
+          <div className="animate-fade-up">
             <div className="mb-4 flex items-center gap-3">
               <ElectionStatusBadge status={results.election.status} />
               <span className="inline-flex items-center gap-1.5 text-xs text-stone">
@@ -113,20 +112,26 @@ export function ElectionResultsClient({ slug }: { slug: string }) {
               {results.election.title}
             </h1>
 
-            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold/[0.06] px-4 py-1.5">
+            <div
+              aria-live="polite"
+              aria-atomic="true"
+              className="mt-5 inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold/[0.06] px-4 py-1.5"
+            >
               <Trophy className="h-4 w-4 text-gold" />
               <span className="font-display text-lg text-gold">
                 {results.totalVotes.toLocaleString()}
               </span>
               <span className="text-sm text-stone">total votes cast</span>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
       <div className="container space-y-8 py-14 md:py-18">
         {results.categories.length === 0 ? (
-          <p className="text-center text-stone">No categories to show results for yet.</p>
+          <div className="surface-card p-10 text-center text-stone">
+            No categories to show results for yet.
+          </div>
         ) : (
           results.categories.map((category) => (
             <CategoryLeaderboard key={category.category.id} results={category} />

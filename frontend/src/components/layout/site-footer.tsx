@@ -21,12 +21,12 @@ export function SiteFooter() {
             </p>
             <ul className="space-y-2 text-sm text-stone">
               <li>
-                <Link href="/" className="transition hover:text-cream">
+                <Link href="/" className="focus-ring rounded-sm transition hover:text-cream">
                   Active elections
                 </Link>
               </li>
               <li>
-                <Link href="/#how-it-works" className="transition hover:text-cream">
+                <Link href="/#how-it-works" className="focus-ring rounded-sm transition hover:text-cream">
                   How voting works
                 </Link>
               </li>
@@ -36,7 +36,7 @@ export function SiteFooter() {
       </div>
 
       <div className="border-t border-border/40">
-        <div className="container flex flex-col gap-2 py-5 text-xs text-stone-soft sm:flex-row sm:items-center sm:justify-between">
+        <div className="container flex flex-col gap-2 py-5 text-xs text-stone sm:flex-row sm:items-center sm:justify-between">
           <p>© {year} Ximacent. All rights reserved.</p>
           <p>Powered by secure checkout</p>
         </div>

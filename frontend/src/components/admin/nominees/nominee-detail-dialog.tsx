@@ -1,6 +1,7 @@
 "use client";
 
 import { BadgeCheck, Barcode, Layers3, Trophy, UserRound } from "lucide-react";
+import Image from "next/image";
 import {
   Dialog,
   DialogContent,
@@ -39,11 +40,12 @@ export function NomineeDetailDialog({
           <div className="relative grid sm:grid-cols-[minmax(190px,0.78fr)_1.22fr]">
             <div className="relative aspect-[1.15/1] min-h-[220px] overflow-hidden bg-secondary sm:aspect-auto sm:min-h-[285px]">
               {imageSrc ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   src={imageSrc}
                   alt={`${nominee.name} profile`}
-                  className="h-full w-full object-cover transition-transform duration-500 hover:scale-[1.03]"
+                  fill
+                  sizes="(max-width: 640px) 100vw, 315px"
+                  className="object-cover transition-transform duration-500 hover:scale-[1.03]"
                 />
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-[radial-gradient(circle_at_center,rgba(212,165,116,0.14),transparent_55%)]">

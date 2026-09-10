@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import { ArrowLeft, Frown, Search, X } from "lucide-react";
 import { getPublicCategory } from "@/lib/api/elections";
 import { NomineeCard } from "@/components/nominees/nominee-card";
@@ -26,6 +25,7 @@ export function CategoryDetailClient({
   const { data: category, isLoading, isError, refetch } = useQuery({
     queryKey: ["public-category", categoryId],
     queryFn: () => getPublicCategory(categoryId),
+    staleTime: 60_000,
   });
 
   const [nomineeSearch, setNomineeSearch] = useState("");
@@ -39,13 +39,16 @@ export function CategoryDetailClient({
 
   if (isLoading) {
     return (
-      <div className="container py-16">
-        <Skeleton className="mb-6 h-6 w-32" />
-        <Skeleton className="h-10 w-1/2" />
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="aspect-[4/5] w-full" />
-          ))}
+      <div>
+        <div className="relative min-h-[14rem] overflow-hidden border-b border-border/40 md:min-h-[18rem]">
+          <Skeleton className="absolute inset-0 rounded-none" />
+        </div>
+        <div className="container py-14">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="aspect-[4/5] w-full" />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -76,12 +79,12 @@ export function CategoryDetailClient({
 
   return (
     <div>
-      <section className="relative overflow-hidden border-b border-border/40">
+      <section className="relative min-h-[14rem] overflow-hidden border-b border-border/40 md:min-h-[18rem]">
         {bannerSrc ? (
           <>
             <Image
               src={bannerSrc}
-              alt=""
+              alt={`${category.election.title} banner`}
               fill
               priority
               sizes="100vw"
@@ -104,11 +107,7 @@ export function CategoryDetailClient({
             {category.election.title}
           </Link>
 
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
+          <div className="animate-fade-up">
             <div className="mb-4">
               <ElectionStatusBadge status={category.election.status} />
             </div>
@@ -124,7 +123,7 @@ export function CategoryDetailClient({
             <div className="mt-6">
               <LiveResultsLink slug={slug} />
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -144,7 +143,7 @@ export function CategoryDetailClient({
                 <button
                   onClick={() => setNomineeSearch("")}
                   aria-label="Clear search"
-                  className="focus-ring absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-stone hover:text-cream"
+                  className="focus-ring absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded text-stone hover:text-cream"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -154,9 +153,13 @@ export function CategoryDetailClient({
         )}
 
         {category.nominees.length === 0 ? (
-          <p className="text-center text-stone">No nominees in this category yet.</p>
+          <div className="surface-card p-10 text-center text-stone">
+            No nominees in this category yet.
+          </div>
         ) : filteredNominees.length === 0 ? (
-          <p className="text-center text-stone">No nominees match &quot;{nomineeSearch}&quot;.</p>
+          <div className="surface-card p-10 text-center text-stone">
+            No nominees match &quot;{nomineeSearch}&quot;.
+          </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {filteredNominees.map((nominee, i) => (
@@ -168,6 +171,7 @@ export function CategoryDetailClient({
                 pricePerVote={category.election.pricePerVote}
                 votingOpen={votingOpen}
                 index={i}
+                priority={i < 4}
               />
             ))}
           </div>

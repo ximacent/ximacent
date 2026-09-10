@@ -1,6 +1,3 @@
-"use client";
-
-import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, Sparkles, Trophy } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -28,19 +25,13 @@ const features = [
 export default function HomePage() {
   return (
     <div>
-      {/* Hero — brand-first composition */}
       <section className="relative overflow-hidden">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(212,165,116,0.14),_transparent_55%)]"
         />
         <div className="container relative flex min-h-[calc(100vh-4.5rem)] flex-col justify-center py-16 md:py-22">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="max-w-3xl"
-          >
+          <div className="animate-fade-up max-w-3xl">
             <p className="mb-4 font-display text-2xl text-champagne md:text-3xl">
               Ximacent
             </p>
@@ -63,7 +54,7 @@ export default function HomePage() {
                 <Link href="#how-it-works">How it works</Link>
               </Button>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -81,20 +72,17 @@ export default function HomePage() {
 
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {features.map((feature, i) => (
-              <motion.div
+              <div
                 key={feature.title}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ delay: i * 0.08, duration: 0.35 }}
-                className="surface-card p-6 transition hover:border-champagne/30 hover:shadow-glow"
+                className="surface-card animate-fade-up p-6 transition hover:border-champagne/30 hover:shadow-glow"
+                style={{ animationDelay: `${i * 80}ms` }}
               >
                 <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-md bg-champagne/10 text-champagne ring-1 ring-champagne/25">
                   <feature.icon className="h-5 w-5" />
                 </div>
                 <h3 className="font-display text-lg text-cream">{feature.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-stone">{feature.body}</p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

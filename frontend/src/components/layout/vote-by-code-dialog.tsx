@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowRight, Search, UserRound } from "lucide-react";
@@ -107,7 +108,13 @@ export function VoteByCodeDialog({
             >
               <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-surface-elevated">
                 {imageSrc ? (
-                  <img src={imageSrc} alt="" className="h-full w-full object-cover" />
+                  <Image
+                    src={imageSrc}
+                    alt={`${result.name} profile`}
+                    fill
+                    sizes="48px"
+                    className="object-cover"
+                  />
                 ) : (
                   <UserRound className="h-5 w-5 text-stone" />
                 )}

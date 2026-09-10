@@ -2,13 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { VoteByCodeDialog } from "@/components/layout/vote-by-code-dialog";
+
+const VoteByCodeDialog = dynamic(
+  () =>
+    import("@/components/layout/vote-by-code-dialog").then(
+      (mod) => mod.VoteByCodeDialog
+    ),
+  { ssr: false }
+);
 
 const navLinks = [
   { href: "/", label: "Elections" },
@@ -66,7 +73,7 @@ export function SiteHeader() {
       <div className="container flex h-16 items-center justify-between md:h-18">
         <Link
           href="/"
-          className="group flex items-center gap-2 focus-ring rounded-md"
+          className="group focus-ring rounded-md"
           onClick={() => setOpen(false)}
         >
           <Image
@@ -75,10 +82,11 @@ export function SiteHeader() {
             width={160}
             height={32}
             priority
+            sizes="160px"
           />
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-1 md:flex" aria-label="Primary">
           {navLinks.map((link) => {
             const active = link.href === "/"
               ? isElectionsActive
@@ -101,14 +109,14 @@ export function SiteHeader() {
               </Link>
             );
           })}
-          <Button asChild size="sm" className="ml-3">
-            <button
-              type="button"
-              onClick={() => setVoteCodeOpen(true)}
-              aria-haspopup="dialog"
-            >
-              Vote now
-            </button>
+          <Button
+            type="button"
+            size="sm"
+            className="ml-3"
+            onClick={() => setVoteCodeOpen(true)}
+            aria-haspopup="dialog"
+          >
+            Vote now
           </Button>
         </nav>
 
@@ -118,62 +126,60 @@ export function SiteHeader() {
           className="md:hidden"
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
+          aria-controls="mobile-nav"
           onClick={() => setOpen((v) => !v)}
         >
           {open ? <X /> : <Menu />}
         </Button>
       </div>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
-            className="overflow-hidden border-t border-border/50 md:hidden"
-          >
-            <nav className="container flex flex-col gap-1 py-4">
-              {navLinks.map((link) => {
-                const active = link.href === "/"
-                  ? isElectionsActive
-                  : link.href.includes("#how-it-works")
-                    ? isHowItWorksActive
-                    : pathname.startsWith(link.href);
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setOpen(false)}
-                    aria-current={active ? "page" : undefined}
-                    className={cn(
-                      "rounded-md px-3 py-3 text-base font-medium transition-colors focus-ring",
-                      active
-                        ? "bg-champagne/10 text-champagne"
-                        : "text-cream hover:bg-secondary hover:text-champagne"
-                    )}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-              <Button
-                type="button"
-                className="mt-2 w-full"
-                onClick={() => {
-                  setOpen(false);
-                  setVoteCodeOpen(true);
-                }}
-                aria-haspopup="dialog"
-              >
-                Vote now
-              </Button>
-            </nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {open && (
+        <div
+          id="mobile-nav"
+          className="animate-fade-in overflow-hidden border-t border-border/50 md:hidden"
+        >
+          <nav className="container flex flex-col gap-1 py-4" aria-label="Mobile">
+            {navLinks.map((link) => {
+              const active = link.href === "/"
+                ? isElectionsActive
+                : link.href.includes("#how-it-works")
+                  ? isHowItWorksActive
+                  : pathname.startsWith(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "rounded-md px-3 py-3 text-base font-medium transition-colors focus-ring",
+                    active
+                      ? "bg-champagne/10 text-champagne"
+                      : "text-cream hover:bg-secondary hover:text-champagne"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+            <Button
+              type="button"
+              className="mt-2 min-h-11 w-full"
+              onClick={() => {
+                setOpen(false);
+                setVoteCodeOpen(true);
+              }}
+              aria-haspopup="dialog"
+            >
+              Vote now
+            </Button>
+          </nav>
+        </div>
+      )}
 
-      <VoteByCodeDialog open={voteCodeOpen} onOpenChange={setVoteCodeOpen} />
+      {voteCodeOpen && (
+        <VoteByCodeDialog open={voteCodeOpen} onOpenChange={setVoteCodeOpen} />
+      )}
     </header>
   );
 }

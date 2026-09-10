@@ -1,6 +1,4 @@
-"use client";
-
-import { motion } from "framer-motion";
+import Image from "next/image";
 import { Crown, UserRound } from "lucide-react";
 import { mediaUrl, cn } from "@/lib/utils";
 
@@ -28,18 +26,15 @@ export function LeaderboardRow({
   const imageSrc = mediaUrl(entry.imageUrl);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -12 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.35, ease: "easeOut" }}
+    <div
       className={cn(
-        "relative flex items-center gap-4 overflow-hidden rounded-lg border p-3.5 transition sm:p-4",
+        "relative flex items-center gap-3 overflow-hidden rounded-lg border p-3.5 transition sm:gap-4 sm:p-4 animate-fade-up",
         isFirst
           ? "border-gold/30 bg-gold/[0.06] shadow-glow"
           : "border-border/60 bg-card/60"
       )}
+      style={{ animationDelay: `${index * 40}ms` }}
     >
-      {/* Progress bar backdrop */}
       <div
         aria-hidden
         className={cn(
@@ -59,8 +54,13 @@ export function LeaderboardRow({
 
       <div className="relative z-10 h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-secondary ring-2 ring-border/50 sm:h-14 sm:w-14">
         {imageSrc ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageSrc} alt={entry.name} className="h-full w-full object-cover" />
+          <Image
+            src={imageSrc}
+            alt={entry.name}
+            fill
+            sizes="56px"
+            className="object-cover"
+          />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <UserRound className="h-6 w-6 text-stone/40" />
@@ -86,6 +86,6 @@ export function LeaderboardRow({
         </p>
         <p className="text-[11px] text-stone">votes</p>
       </div>
-    </motion.div>
+    </div>
   );
 }

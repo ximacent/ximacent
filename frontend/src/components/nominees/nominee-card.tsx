@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { UserRound, Vote as VoteIcon } from "lucide-react";
 import { mediaUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { VoteDialog } from "@/components/payments/vote-dialog";
 import type { PublicNominee } from "@/lib/api/types";
+
+const VoteDialog = dynamic(
+  () => import("@/components/payments/vote-dialog").then((mod) => mod.VoteDialog),
+  { ssr: false }
+);
 
 function fallbackBio(name: string): string {
   return `${name} is one of the nominees in this category — cast your vote to show your support!`;
@@ -15,11 +19,11 @@ function fallbackBio(name: string): string {
 
 export function NomineeCard({
   nominee,
-  electionId,
   electionTitle,
   pricePerVote,
   votingOpen,
   index = 0,
+  priority = false,
 }: {
   nominee: PublicNominee;
   electionId: string;
@@ -27,18 +31,16 @@ export function NomineeCard({
   pricePerVote: string;
   votingOpen: boolean;
   index?: number;
+  priority?: boolean;
 }) {
   const [voteOpen, setVoteOpen] = useState(false);
   const imageSrc = mediaUrl(nominee.imageUrl);
 
   return (
     <>
-      <motion.article
-        initial={{ opacity: 0, y: 14 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-30px" }}
-        transition={{ delay: index * 0.05, duration: 0.35, ease: "easeOut" }}
-        className="surface-card group flex flex-col overflow-hidden transition duration-300 hover:border-champagne/30 hover:shadow-elevated"
+      <article
+        className="surface-card group animate-fade-up flex flex-col overflow-hidden transition duration-300 hover:border-champagne/30 hover:shadow-elevated"
+        style={{ animationDelay: `${index * 50}ms` }}
       >
         <div className="relative aspect-[4/5] w-full overflow-hidden bg-surface-elevated">
           {imageSrc ? (
@@ -46,7 +48,8 @@ export function NomineeCard({
               src={imageSrc}
               alt={nominee.name}
               fill
-              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              priority={priority}
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover transition duration-500 group-hover:scale-105"
             />
           ) : (
@@ -61,7 +64,7 @@ export function NomineeCard({
         </div>
 
         <div className="flex flex-1 flex-col p-5">
-          <h4 className="font-display text-lg text-cream">{nominee.name}</h4>
+          <h3 className="font-display text-lg text-cream">{nominee.name}</h3>
           <p
             className={`mt-1.5 line-clamp-2 flex-1 text-sm leading-relaxed ${
               nominee.bio ? "text-stone" : "text-stone/70 italic"
@@ -71,7 +74,7 @@ export function NomineeCard({
           </p>
 
           <Button
-            className="mt-4 w-full"
+            className="mt-4 min-h-11 w-full"
             disabled={!votingOpen}
             onClick={() => setVoteOpen(true)}
           >
@@ -79,15 +82,17 @@ export function NomineeCard({
             {votingOpen ? "Vote for this nominee" : "Voting closed"}
           </Button>
         </div>
-      </motion.article>
+      </article>
 
-      <VoteDialog
-        open={voteOpen}
-        onOpenChange={setVoteOpen}
-        nominee={nominee}
-        electionTitle={electionTitle}
-        pricePerVote={pricePerVote}
-      />
+      {voteOpen && (
+        <VoteDialog
+          open={voteOpen}
+          onOpenChange={setVoteOpen}
+          nominee={nominee}
+          electionTitle={electionTitle}
+          pricePerVote={pricePerVote}
+        />
+      )}
     </>
   );
 }

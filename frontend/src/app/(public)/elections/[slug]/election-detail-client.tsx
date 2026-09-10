@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import { ArrowLeft, Calendar, Coins, Frown, Search, X } from "lucide-react";
 import { getPublicElection } from "@/lib/api/elections";
 import { ElectionStatusBadge } from "@/components/elections/election-status-badge";
@@ -27,6 +26,7 @@ export function ElectionDetailClient({ slug }: { slug: string }) {
   const { data: election, isLoading, isError, refetch } = useQuery({
     queryKey: ["public-election", slug],
     queryFn: () => getPublicElection(slug),
+    staleTime: 60_000,
   });
 
   const [categorySearch, setCategorySearch] = useState("");
@@ -43,14 +43,18 @@ export function ElectionDetailClient({ slug }: { slug: string }) {
 
   if (isLoading) {
     return (
-      <div className="container py-16">
-        <Skeleton className="mb-6 h-6 w-32" />
-        <Skeleton className="h-10 w-2/3" />
-        <Skeleton className="mt-4 h-4 w-1/2" />
-        <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="aspect-[4/5] w-full" />
-          ))}
+      <div>
+        <div className="relative min-h-[16rem] overflow-hidden border-b border-border/40 md:min-h-[20rem]">
+          <Skeleton className="absolute inset-0 rounded-none" />
+        </div>
+        <div className="container py-14">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="mt-4 h-4 w-2/3" />
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="min-h-[11rem] w-full" />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -81,12 +85,12 @@ export function ElectionDetailClient({ slug }: { slug: string }) {
 
   return (
     <div>
-      <section className="relative overflow-hidden border-b border-border/40">
+      <section className="relative min-h-[16rem] overflow-hidden border-b border-border/40 md:min-h-[20rem]">
         {bannerSrc ? (
           <>
             <Image
               src={bannerSrc}
-              alt=""
+              alt={`${election.title} banner`}
               fill
               priority
               sizes="100vw"
@@ -109,11 +113,7 @@ export function ElectionDetailClient({ slug }: { slug: string }) {
             All elections
           </Link>
 
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
+          <div className="animate-fade-up">
             <div className="mb-4">
               <ElectionStatusBadge status={election.status} />
             </div>
@@ -137,7 +137,7 @@ export function ElectionDetailClient({ slug }: { slug: string }) {
               </span>
               <LiveResultsLink slug={election.slug} />
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -164,7 +164,7 @@ export function ElectionDetailClient({ slug }: { slug: string }) {
                 <button
                   onClick={() => setCategorySearch("")}
                   aria-label="Clear search"
-                  className="focus-ring absolute right-2.5 top-1/2 -translate-y-1/2 rounded p-0.5 text-stone hover:text-cream"
+                  className="focus-ring absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded text-stone hover:text-cream"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -174,11 +174,13 @@ export function ElectionDetailClient({ slug }: { slug: string }) {
         </div>
 
         {election.categories.length === 0 ? (
-          <p className="text-stone">
+          <div className="surface-card p-10 text-center text-stone">
             Categories for this election haven&apos;t been added yet.
-          </p>
+          </div>
         ) : filteredCategories.length === 0 ? (
-          <p className="text-stone">No categories match &quot;{categorySearch}&quot;.</p>
+          <div className="surface-card p-10 text-center text-stone">
+            No categories match &quot;{categorySearch}&quot;.
+          </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredCategories.map((category, i) => (

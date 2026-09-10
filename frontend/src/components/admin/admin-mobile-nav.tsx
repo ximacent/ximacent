@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
@@ -12,14 +12,50 @@ import { ADMIN_NAV_ITEMS } from "./admin-nav-items";
 
 export function AdminMobileNav() {
   const [open, setOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    if (!open) return;
+
+    closeButtonRef.current?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+        menuButtonRef.current?.focus();
+        return;
+      }
+      if (event.key !== "Tab" || !drawerRef.current) return;
+
+      const focusable = drawerRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled])'
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open]);
 
   return (
     <>
       <header className="flex items-center justify-between border-b border-border/60 bg-surface px-4 py-3 md:hidden">
         <Image src="/logo.png" alt="Ximacent" width={120} height={24} priority />
         <button
+          ref={menuButtonRef}
           onClick={() => setOpen(true)}
           aria-label="Open menu"
           aria-expanded={open}
@@ -40,6 +76,10 @@ export function AdminMobileNav() {
               className="fixed inset-0 z-40 bg-ink/70 backdrop-blur-sm md:hidden"
             />
             <motion.div
+              ref={drawerRef}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Admin navigation"
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
@@ -49,6 +89,7 @@ export function AdminMobileNav() {
               <div className="flex items-center justify-between border-b border-border/60 px-5 py-4">
                 <span className="font-display text-sm text-cream">Menu</span>
                 <button
+                  ref={closeButtonRef}
                   onClick={() => setOpen(false)}
                   aria-label="Close menu"
                   className="focus-ring rounded-md p-1.5 text-stone hover:text-cream"

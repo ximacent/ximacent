@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Eye, Pencil, Trash2, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,8 +54,13 @@ export function NomineesTable({
                 <div className="flex items-center gap-3">
                   <div className="relative h-9 w-9 flex-shrink-0 overflow-hidden rounded-full border border-border/60 bg-surface-elevated">
                     {imageSrc ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={imageSrc} alt="" className="h-full w-full object-cover" />
+                      <Image
+                        src={imageSrc}
+                        alt={`${nominee.name} profile`}
+                        fill
+                        sizes="36px"
+                        className="object-cover"
+                      />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
                         <UserRound className="h-4 w-4 text-stone/40" />
