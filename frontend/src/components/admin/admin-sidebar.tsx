@@ -1,9 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { Trophy, LogOut, ExternalLink } from "lucide-react";
+import { LogOut, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "./auth-provider";
 import { ADMIN_NAV_ITEMS } from "./admin-nav-items";
@@ -19,11 +20,8 @@ export function AdminSidebar() {
   return (
     <aside className="flex h-full w-64 flex-shrink-0 flex-col border-r border-border/60 bg-surface">
       <div className="flex items-center gap-2.5 border-b border-border/60 px-6 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-champagne/15">
-          <Trophy className="h-4 w-4 text-champagne" />
-        </div>
         <div>
-          <p className="font-display text-sm leading-tight text-cream">Ximacent</p>
+          <Image src="/logo.png" alt="Ximacent" width={120} height={24} priority />
           <p className="text-[11px] leading-tight text-stone">Control panel</p>
         </div>
       </div>

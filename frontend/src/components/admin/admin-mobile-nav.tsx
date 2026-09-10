@@ -1,10 +1,11 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X, Trophy, LogOut } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "./auth-provider";
 import { ADMIN_NAV_ITEMS } from "./admin-nav-items";
@@ -17,12 +18,7 @@ export function AdminMobileNav() {
   return (
     <>
       <header className="flex items-center justify-between border-b border-border/60 bg-surface px-4 py-3 md:hidden">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-champagne/15">
-            <Trophy className="h-3.5 w-3.5 text-champagne" />
-          </div>
-          <span className="font-display text-sm text-cream">Ximacent</span>
-        </div>
+        <Image src="/logo.png" alt="Ximacent" width={120} height={24} priority />
         <button
           onClick={() => setOpen(true)}
           aria-label="Open menu"

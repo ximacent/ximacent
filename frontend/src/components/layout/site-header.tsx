@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -68,12 +69,13 @@ export function SiteHeader() {
           className="group flex items-center gap-2 focus-ring rounded-md"
           onClick={() => setOpen(false)}
         >
-          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-champagne/15 text-champagne ring-1 ring-champagne/30 transition group-hover:bg-champagne/25 group-hover:shadow-glow">
-            <span className="font-display text-sm font-semibold">X</span>
-          </span>
-          <span className="font-display text-xl font-semibold tracking-tight text-cream">
-            Ximacent
-          </span>
+          <Image
+            src="/logo.png"
+            alt="Ximacent"
+            width={160}
+            height={32}
+            priority
+          />
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex">
