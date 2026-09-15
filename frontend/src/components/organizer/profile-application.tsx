@@ -46,6 +46,21 @@ const ghanaRegions = [
   "Northern", "Oti", "Savannah", "Upper East", "Upper West", "Volta", "Western", "Western North",
 ];
 
+function ghanaCardDigits(value: string): string {
+  return value.replace(/\D/g, "").slice(0, 10);
+}
+
+function formatGhanaCardNumber(value: string): string {
+  const digits = ghanaCardDigits(value);
+  if (!digits) return "";
+  return `GHA-${digits.slice(0, 9)}${digits.length > 9 ? `-${digits.slice(9)}` : ""}`;
+}
+
+function formatGhanaCardInput(value: string): string {
+  const digits = ghanaCardDigits(value);
+  return digits.length > 9 ? `${digits.slice(0, 9)}-${digits.slice(9)}` : digits;
+}
+
 function profileValues(profile?: OrganizerProfile): OrganizerProfileFormValues {
   return {
     organizationName: profile?.organizationName ?? "",
@@ -56,7 +71,7 @@ function profileValues(profile?: OrganizerProfile): OrganizerProfileFormValues {
     website: profile?.website ?? "",
     socialMediaUrl: profile?.socialMediaUrl ?? "",
     description: profile?.description ?? "",
-    ghCardNumber: profile?.ghCardNumber ?? "",
+    ghCardNumber: formatGhanaCardNumber(profile?.ghCardNumber ?? ""),
   };
 }
 
@@ -231,7 +246,7 @@ export function ProfileApplication() {
 
         <div className="space-y-3"><Label htmlFor="gh-card-image">Ghana Card image</Label><div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_10rem] sm:items-start"><label htmlFor="gh-card-image" className={`flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border/80 bg-secondary/25 p-4 text-center transition hover:border-champagne/50 ${locked ? "pointer-events-none opacity-60" : ""}`}><FileImage className="h-6 w-6 text-champagne" /><span className="text-sm text-cream">{image ? image.name : "Choose Ghana Card image"}</span><span className="text-xs text-stone">JPG, PNG, or WEBP · max 5 MB</span><Input id="gh-card-image" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={locked} onChange={(event) => chooseImage(event.target.files?.[0])} /></label>{(preview || profile?.ghCardImageUrl) && <div className="relative aspect-video overflow-hidden rounded-md border border-border/60 bg-secondary"><Image src={preview || mediaUrl(profile?.ghCardImageUrl) || ""} alt="Ghana Card preview" fill className="object-cover" unoptimized /></div>}</div>{missing.some((field) => field.toLowerCase().includes("ghcardimage")) && <p className="text-xs text-rose">Ghana Card image is required.</p>}</div>
 
-        {!locked && <div className="flex flex-col gap-3 border-t border-border/60 pt-5 sm:flex-row sm:justify-end"><Button type="button" variant="outline" disabled={updateMutation.isPending || submitMutation.isPending} onClick={save}>{updateMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin" />Saving…</> : <><Save className="h-4 w-4" />Save profile</>}</Button>{(status === "not_started" || status === "rejected") && <Button type="button" disabled={updateMutation.isPending || submitMutation.isPending} onClick={() => submitMutation.mutate()}>{submitMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin" />Submitting…</> : <><Send className="h-4 w-4" />Submit application</>}</Button>}</div>}
+        {!locked && <div className="flex flex-col items-stretch gap-3 border-t border-border/60 pt-5 sm:items-end"><div className="flex flex-col gap-3 sm:flex-row"><Button type="button" variant="outline" disabled={updateMutation.isPending || submitMutation.isPending} onClick={save}>{updateMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin" />Saving…</> : <><Save className="h-4 w-4" />Save profile</>}</Button>{(status === "not_started" || status === "rejected") && <Button type="button" disabled={updateMutation.isPending || submitMutation.isPending} onClick={() => submitMutation.mutate()}>{submitMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin" />Submitting…</> : <><Send className="h-4 w-4" />Submit application</>}</Button>}</div>{status === "pending" && <div className={`w-full rounded-md border px-4 py-3 text-left text-sm sm:max-w-md ${statusCopy.className}`} role="status"><p className="font-semibold">{statusCopy.label}</p><p className="mt-1 leading-relaxed opacity-90">{statusCopy.description}</p></div>}</div>}
         {locked && <div className="flex items-center gap-2 border-t border-border/60 pt-5 text-sm text-stone"><CheckCircle2 className="h-4 w-4 text-emerald-400" />Profile editing is locked while this application is {status}.</div>}
       </div>
     </section>
@@ -241,5 +256,8 @@ export function ProfileApplication() {
 function Field({ label, id, value, disabled, missing, onChange, placeholder }: { label: string; id: string; value: string; disabled: boolean; missing: string[]; onChange: (value: string) => void; placeholder?: string }) {
   const fieldKey = id.replace("organization-", "");
   const hasMissing = missing.some((field) => matchesFieldRequirement(field, fieldKey));
+  if (id === "gh-card-number") {
+    return <div className="space-y-2"><Label htmlFor={id}>{label}</Label><div className={`flex min-h-10 items-center rounded-md border bg-secondary/25 focus-within:ring-2 focus-within:ring-ring ${hasMissing ? "border-rose/70" : "border-input"}`}><span className="shrink-0 pl-3 text-sm text-stone">GHA-</span><Input id={id} value={formatGhanaCardInput(value)} disabled={disabled} placeholder="123456789-0" inputMode="numeric" maxLength={11} onChange={(event) => onChange(formatGhanaCardNumber(event.target.value))} className="border-0 bg-transparent pl-0 shadow-none focus-visible:ring-0" /></div>{hasMissing && <p className="text-xs text-rose">This field needs attention.</p>}</div>;
+  }
   return <div className="space-y-2"><Label htmlFor={id}>{label}</Label><Input id={id} value={value} disabled={disabled} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} className={hasMissing ? "border-rose/70" : undefined} />{hasMissing && <p className="text-xs text-rose">This field needs attention.</p>}</div>;
 }
