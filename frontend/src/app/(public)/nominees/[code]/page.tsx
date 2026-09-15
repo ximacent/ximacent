@@ -7,6 +7,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { getNomineeByCode } from "@/lib/api/nominees";
 import { mediaUrl } from "@/lib/utils";
 import { absoluteUrl, electionStateLabel, trimDescription } from "@/lib/seo";
+import { LoadingLink } from "@/components/ui/loading-link";
 
 type Props = { params: Promise<{ code: string }> };
 
@@ -101,17 +102,17 @@ export default async function NomineePage({ params }: Props) {
           <div className="mt-8 flex flex-wrap gap-3">
             {nominee.election.status === "active" ? (
               <Button asChild>
-                <Link href={`/vote/${encodeURIComponent(nominee.code)}`}>
+                <LoadingLink href={`/vote/${encodeURIComponent(nominee.code)}`}>
                   Vote for this nominee
                   <ArrowRight className="ml-1 h-4 w-4" />
-                </Link>
+                </LoadingLink>
               </Button>
             ) : (
               <span className="inline-flex min-h-11 items-center rounded-md border border-border px-5 py-2.5 text-sm text-stone">
                 Voting closed
               </span>
             )}
-            <Button asChild variant="outline"><Link href={`${electionPath}/results`}>View results</Link></Button>
+            <Button asChild variant="outline"><LoadingLink href={`${electionPath}/results`}>View results</LoadingLink></Button>
           </div>
         </div>
       </article>

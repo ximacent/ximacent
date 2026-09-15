@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { LoadingLink } from "@/components/ui/loading-link";
 
 const VoteByCodeDialog = dynamic(
   () =>
@@ -110,7 +111,7 @@ export function SiteHeader() {
                 ? isHowItWorksActive
                 : pathname.startsWith(link.href);
             return (
-              <Link
+              <LoadingLink
                 key={link.href}
                 href={link.href}
                 aria-current={active ? "page" : undefined}
@@ -122,11 +123,11 @@ export function SiteHeader() {
                 )}
               >
                 {link.label}
-              </Link>
+              </LoadingLink>
             );
           })}
           <Button asChild variant="outline" size="sm" className="ml-2">
-            <Link href="/organizer">Organizer portal</Link>
+            <LoadingLink href="/organizer">Organizer portal</LoadingLink>
           </Button>
           <Button
             type="button"
@@ -165,7 +166,7 @@ export function SiteHeader() {
                   ? isHowItWorksActive
                   : pathname.startsWith(link.href);
               return (
-                <Link
+                <LoadingLink
                   key={link.href}
                   href={link.href}
                   onClick={() => setOpen(false)}
@@ -178,13 +179,13 @@ export function SiteHeader() {
                   )}
                 >
                   {link.label}
-                </Link>
+                </LoadingLink>
               );
             })}
             <Button asChild variant="outline" className="min-h-11 w-full">
-              <Link href="/organizer" onClick={() => setOpen(false)}>
+              <LoadingLink href="/organizer" onClick={() => setOpen(false)}>
                 Organizer portal
-              </Link>
+              </LoadingLink>
             </Button>
             <Button
               type="button"

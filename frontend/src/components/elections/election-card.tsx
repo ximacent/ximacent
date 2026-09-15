@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight, Calendar, Coins } from "lucide-react";
 import type { Election } from "@/lib/api/types";
@@ -6,6 +5,7 @@ import { mediaUrl } from "@/lib/utils";
 import { ElectionStatusBadge } from "./election-status-badge";
 import { ElectionBannerFallback } from "./election-banner-fallback";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingLink } from "@/components/ui/loading-link";
 
 export function formatDateRange(start: string, end: string): string {
   const s = new Date(start);
@@ -51,7 +51,7 @@ export function ElectionCard({
       className="animate-fade-up"
       style={{ animationDelay: `${index * 60}ms` }}
     >
-      <Link
+      <LoadingLink
         href={`/elections/${election.slug}`}
         className="group focus-ring block overflow-hidden rounded-lg"
       >
@@ -103,7 +103,7 @@ export function ElectionCard({
             </div>
           </div>
         </article>
-      </Link>
+      </LoadingLink>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { LoadingLink } from "@/components/ui/loading-link";
 
 export function SiteFooter() {
   const year = new Date().getFullYear();
@@ -21,24 +21,24 @@ export function SiteFooter() {
             </p>
             <ul className="space-y-2 text-sm text-stone">
               <li>
-                <Link href="/#elections" className="focus-ring rounded-sm transition hover:text-cream">
+                <LoadingLink href="/#elections" className="focus-ring rounded-sm transition hover:text-cream">
                   Active elections
-                </Link>
+                </LoadingLink>
               </li>
               <li>
-                <Link href="/#how-it-works" className="focus-ring rounded-sm transition hover:text-cream">
+                <LoadingLink href="/#how-it-works" className="focus-ring rounded-sm transition hover:text-cream">
                   How voting works
-                </Link>
+                </LoadingLink>
               </li>
               <li>
-                <Link href="/organizer" className="focus-ring rounded-sm transition hover:text-cream">
+                <LoadingLink href="/organizer" className="focus-ring rounded-sm transition hover:text-cream">
                   Organizer portal
-                </Link>
+                </LoadingLink>
               </li>
               <li>
-                <Link href="/vote" className="focus-ring rounded-sm transition hover:text-cream">
+                <LoadingLink href="/vote" className="focus-ring rounded-sm transition hover:text-cream">
                   Vote by code
-                </Link>
+                </LoadingLink>
               </li>
             </ul>
           </div>

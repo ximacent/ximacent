@@ -1,9 +1,9 @@
-import Link from "next/link";
 import Image from "next/image";
 import { ArrowUpRight, Users } from "lucide-react";
 import type { PublicCategory } from "@/lib/api/types";
 import { mediaUrl } from "@/lib/utils";
 import { ElectionBannerFallback } from "@/components/elections/election-banner-fallback";
+import { LoadingLink } from "@/components/ui/loading-link";
 
 export function CategoryCard({
   category,
@@ -25,7 +25,7 @@ export function CategoryCard({
       className="animate-fade-up h-full"
       style={{ animationDelay: `${index * 50}ms` }}
     >
-      <Link
+      <LoadingLink
         href={`/elections/${electionSlug}/categories/${category.id}`}
         className="group focus-ring block h-full overflow-hidden rounded-lg"
       >
@@ -69,7 +69,7 @@ export function CategoryCard({
             <ArrowUpRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </div>
         </article>
-      </Link>
+      </LoadingLink>
     </div>
   );
 }
