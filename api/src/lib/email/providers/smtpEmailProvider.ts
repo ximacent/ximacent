@@ -24,7 +24,8 @@ export class SmtpEmailProvider implements EmailProvider {
       port: Number(port),
       secure: Number(port) === 465,
       auth: { user, pass },
-    });
+      family: 4,
+    } as any);
   }
 
   async send(message: EmailMessage): Promise<void> {
