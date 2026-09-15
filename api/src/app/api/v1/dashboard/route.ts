@@ -14,4 +14,4 @@ const getHandler: AuthedHandler = async (_req, _ctx) => {
   }
 };
 
-export const GET = withAuth(getHandler, { requireRole: UserRole.ADMIN });
+export const GET = withAuth(getHandler, { requireRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN] });

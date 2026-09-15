@@ -22,7 +22,7 @@ import type { Category } from "@/lib/api/types";
 type PendingDelete = Category | null;
 type FormState = { mode: "create" } | { mode: "edit"; category: Category } | null;
 
-export function ElectionCategoriesPanel({ electionId }: { electionId: string }) {
+export function ElectionCategoriesPanel({ electionId, detailBasePath = "/admin/categories" }: { electionId: string; detailBasePath?: string }) {
   const queryClient = useQueryClient();
   const [formState, setFormState] = useState<FormState>(null);
   const [pendingDelete, setPendingDelete] = useState<PendingDelete>(null);
@@ -129,6 +129,7 @@ export function ElectionCategoriesPanel({ electionId }: { electionId: string }) 
             onMoveUp={moveUp}
             onMoveDown={moveDown}
             reorderPendingId={reorderPendingId}
+            detailBasePath={detailBasePath}
           />
         )}
       </div>

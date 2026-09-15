@@ -5,10 +5,11 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "./auth-provider";
 import { ADMIN_NAV_ITEMS } from "./admin-nav-items";
+import { AccountMenu } from "./account-menu";
 
 export function AdminMobileNav() {
   const [open, setOpen] = useState(false);
@@ -16,7 +17,7 @@ export function AdminMobileNav() {
   const drawerRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!open) return;
@@ -54,15 +55,20 @@ export function AdminMobileNav() {
     <>
       <header className="flex items-center justify-between border-b border-border/60 bg-surface px-4 py-3 md:hidden">
         <Image src="/logo.png" alt="Ximacent" width={120} height={24} priority />
-        <button
-          ref={menuButtonRef}
-          onClick={() => setOpen(true)}
-          aria-label="Open menu"
-          aria-expanded={open}
-          className="focus-ring rounded-md p-2 text-cream"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          {user && (
+            <AccountMenu compact />
+          )}
+          <button
+            ref={menuButtonRef}
+            onClick={() => setOpen(true)}
+            aria-label="Open menu"
+            aria-expanded={open}
+            className="focus-ring rounded-md p-2 text-cream"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        </div>
       </header>
 
       <AnimatePresence>
@@ -99,7 +105,7 @@ export function AdminMobileNav() {
               </div>
 
               <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-                {ADMIN_NAV_ITEMS.map((item) => {
+                {ADMIN_NAV_ITEMS.filter((item) => !item.superAdminOnly || user?.role === "super_admin").map((item) => {
                   const isActive = item.exact
                     ? pathname === item.href
                     : pathname.startsWith(item.href);
@@ -126,17 +132,18 @@ export function AdminMobileNav() {
 
               {user && (
                 <div className="border-t border-border/60 p-4">
-                  <p className="truncate text-sm text-cream">
-                    {user.firstName} {user.lastName}
-                  </p>
-                  <p className="truncate text-xs text-stone">{user.email}</p>
-                  <button
-                    onClick={logout}
-                    className="focus-ring mt-3 flex w-full items-center gap-2 rounded-md bg-secondary/60 px-3 py-2 text-sm text-rose transition hover:bg-secondary"
-                  >
-                    <LogOut className="h-4 w-4" />
-                    Log out
-                  </button>
+                  <div className="flex items-center gap-3 rounded-md border border-border/60 bg-secondary/30 px-3 py-2.5">
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-champagne/15 text-xs font-semibold text-champagne">
+                      {`${user.firstName[0] ?? ""}${user.lastName[0] ?? ""}`.toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm text-cream">
+                        {user.firstName} {user.lastName}
+                      </p>
+                      <p className="truncate text-[11px] text-stone">{user.email}</p>
+                    </div>
+                    <AccountMenu compact />
+                  </div>
                 </div>
               )}
             </motion.div>

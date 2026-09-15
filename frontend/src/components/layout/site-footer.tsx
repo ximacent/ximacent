@@ -21,7 +21,7 @@ export function SiteFooter() {
             </p>
             <ul className="space-y-2 text-sm text-stone">
               <li>
-                <Link href="/" className="focus-ring rounded-sm transition hover:text-cream">
+                <Link href="/#elections" className="focus-ring rounded-sm transition hover:text-cream">
                   Active elections
                 </Link>
               </li>
@@ -31,23 +31,13 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/online-voting" className="focus-ring rounded-sm transition hover:text-cream">
-                  Online voting platform
+                <Link href="/organizer" className="focus-ring rounded-sm transition hover:text-cream">
+                  Organizer portal
                 </Link>
               </li>
               <li>
-                <Link href="/online-awards-voting" className="focus-ring rounded-sm transition hover:text-cream">
-                  Awards voting
-                </Link>
-              </li>
-              <li>
-                <Link href="/online-election-voting" className="focus-ring rounded-sm transition hover:text-cream">
-                  Election voting
-                </Link>
-              </li>
-              <li>
-                <Link href="/voting-platform-ghana" className="focus-ring rounded-sm transition hover:text-cream">
-                  Voting platform Ghana
+                <Link href="/vote" className="focus-ring rounded-sm transition hover:text-cream">
+                  Vote by code
                 </Link>
               </li>
             </ul>

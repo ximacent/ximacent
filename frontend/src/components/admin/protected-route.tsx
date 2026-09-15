@@ -6,16 +6,22 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from "./auth-provider";
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (!isLoading && (!isAuthenticated || !user || !["admin", "super_admin"].includes(user.role))) {
       const redirectTo = encodeURIComponent(pathname);
-      router.replace(`/admin/login?redirectTo=${redirectTo}`);
+      router.replace(
+        !isAuthenticated || !user
+          ? `/admin/login?redirectTo=${redirectTo}`
+          : user.role === "organizer"
+            ? "/organizer/dashboard"
+            : "/"
+      );
     }
-  }, [isLoading, isAuthenticated, router, pathname]);
+  }, [isLoading, isAuthenticated, user, router, pathname]);
 
   if (isLoading) {
     return (
@@ -25,7 +31,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user || !["admin", "super_admin"].includes(user.role)) {
     // Redirect effect above is already in flight — render nothing rather
     // than a flash of protected content.
     return null;

@@ -34,4 +34,4 @@ const patchHandler: AuthedHandler = async (req, ctx) => {
   }
 };
 
-export const PATCH = withAuth(patchHandler, { requireRole: UserRole.ADMIN });
+export const PATCH = withAuth(patchHandler, { requireRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN] });

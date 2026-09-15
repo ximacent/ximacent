@@ -51,7 +51,7 @@ export default function AdminElectionsPage() {
   // not core to the page — so the whole screen never blocks on it.
   const { data: creatorsData } = useQuery({
     queryKey: ["admin-users-lite", "admin"],
-    queryFn: () => listUsers({ role: "admin", limit: 100 }),
+    queryFn: () => listUsers({ limit: 100 }),
     staleTime: 5 * 60_000,
     retry: false,
   });

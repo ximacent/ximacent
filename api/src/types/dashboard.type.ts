@@ -64,3 +64,49 @@ export interface DashboardResponse {
   endingSoon: DashboardEndingSoon[];
   attentionItems: AttentionItem[];
 }
+
+// ── Organizer-scoped dashboard ─────────────────────────────────────
+// Deliberately a narrower shape than DashboardResponse, not a filtered
+// copy of it. An organizer should not see platform-wide payment health
+// (stale pending payments), other organizers' elections, or upcoming
+// elections they don't own — so those sections are absent entirely
+// rather than present-but-empty.
+
+export interface OrganizerDashboardOverview {
+  totalElections: number;
+  totalCategories: number;
+  totalNominees: number;
+  totalVotes: number;
+  totalRevenue: string;
+  // Count of the organizer's own elections in each status — drives the
+  // "election status breakdown" widget without the frontend having to
+  // fetch the full election list and count client-side.
+  electionsByStatus: Record<ElectionStatus, number>;
+}
+
+export interface OrganizerDashboardElection {
+  id: string;
+  title: string;
+  slug: string;
+  status: ElectionStatus;
+  startDate: Date;
+  endDate: Date;
+  pricePerVote: string;
+  totalVotes: number;
+  totalRevenue: string;
+  // Null when the election has already ended or isn't active yet —
+  // computed server-side so every client shows the same number rather
+  // than each doing its own timezone-sensitive date math.
+  daysRemaining: number | null;
+}
+
+export interface OrganizerDashboardResponse {
+  overview: OrganizerDashboardOverview;
+  revenue: {
+    total: string;
+    period: Array<{ date: string; amount: string }>;
+  };
+  votingActivity: Array<{ date: string; votes: number }>;
+  elections: OrganizerDashboardElection[];
+  topNominees: DashboardTopNominee[];
+}

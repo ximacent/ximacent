@@ -58,6 +58,8 @@ export function UserFilters({
         <SelectContent>
           <SelectItem value={ALL}>All roles</SelectItem>
           <SelectItem value="admin">Admin</SelectItem>
+          <SelectItem value="super_admin">Super admin</SelectItem>
+          <SelectItem value="organizer">Organizer</SelectItem>
           <SelectItem value="voter">Voter</SelectItem>
         </SelectContent>
       </Select>

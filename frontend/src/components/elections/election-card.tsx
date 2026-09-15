@@ -21,8 +21,8 @@ export function formatDateRange(start: string, end: string): string {
 export function ElectionCardSkeleton() {
   return (
     <div className="surface-card overflow-hidden">
-      <Skeleton className="aspect-[16/9] w-full rounded-none" />
-      <div className="space-y-4 p-6 md:p-7">
+      <Skeleton className="h-56 w-full rounded-none sm:h-52 lg:h-56" />
+      <div className="min-h-[12rem] space-y-4 p-6 md:p-7">
         <Skeleton className="h-6 w-3/4" />
         <Skeleton className="h-4 w-full" />
         <div className="border-t border-border/50 pt-4">
@@ -56,7 +56,7 @@ export function ElectionCard({
         className="group focus-ring block overflow-hidden rounded-lg"
       >
         <article className="surface-card relative flex h-full flex-col justify-between overflow-hidden transition duration-300 hover:-translate-y-1 hover:border-champagne/30 hover:shadow-elevated">
-          <div className="relative aspect-[16/9] w-full overflow-hidden bg-surface-elevated">
+          <div className="relative h-56 w-full overflow-hidden bg-surface-elevated sm:h-52 lg:h-56">
             {bannerSrc ? (
               <Image
                 src={bannerSrc}
@@ -75,7 +75,7 @@ export function ElectionCard({
             </div>
           </div>
 
-          <div className="relative flex flex-1 flex-col justify-between p-6 md:p-7">
+          <div className="relative flex min-h-[12rem] flex-1 flex-col justify-between p-6 md:p-7">
             <div>
               <div className="mb-1 flex items-start justify-between gap-3">
                 <h3 className="font-display text-xl text-cream transition group-hover:text-champagne-soft md:text-2xl">
@@ -132,7 +132,7 @@ export function UpcomingElectionCard({
         aria-disabled="true"
         className="surface-card relative flex h-full cursor-not-allowed flex-col justify-between overflow-hidden opacity-55 grayscale"
       >
-        <div className="relative aspect-[16/9] w-full overflow-hidden bg-surface-elevated">
+        <div className="relative h-56 w-full overflow-hidden bg-surface-elevated sm:h-52 lg:h-56">
           {bannerSrc ? (
             <Image
               src={bannerSrc}
@@ -150,7 +150,7 @@ export function UpcomingElectionCard({
           </div>
         </div>
 
-        <div className="relative flex flex-1 flex-col justify-between p-6 md:p-7">
+        <div className="relative flex min-h-[12rem] flex-1 flex-col justify-between p-6 md:p-7">
           <div>
             <h3 className="font-display text-xl text-cream md:text-2xl">{election.title}</h3>
             {election.description && (

@@ -9,6 +9,7 @@ import type { ImageFileInput } from "@/lib/storage/createWithImages";
 import { CustomAppError } from "@/lib/errors/customAppError";
 import { ErrorCodes } from "@/lib/errors/errorCodes";
 import { PaginationQuery } from "@/types/pagination.type";
+import { assertCanManageCategories, assertCanManageNominees } from "@/lib/authz/electionResourceGuard";
 
 async function extractImage(formData: FormData): Promise<ImageFileInput | undefined> {
   const file = formData.get("image");
@@ -36,7 +37,8 @@ async function extractImage(formData: FormData): Promise<ImageFileInput | undefi
     }
   };
 
-// Create a nominee — admin only. multipart/form-data: name, bio?, categoryId, image?
+// Create a nominee — admin/super_admin, or the owning APPROVED organizer.
+// multipart/form-data: name, bio?, categoryId, image?
 const postHandler: AuthedHandler = async (req, _ctx) => {
   try {
     const formData = await req.formData();
@@ -47,6 +49,11 @@ const postHandler: AuthedHandler = async (req, _ctx) => {
       categoryId: formData.get("categoryId") as string,
     };
 
+    if (!data.categoryId) {
+      throw new CustomAppError("categoryId is required", 400, ErrorCodes.VALIDATION_FAILED.code, ErrorCodes.VALIDATION_FAILED.label, "validation_failed");
+    }
+    await assertCanManageCategories({ id: req.user.sub, role: req.user.role }, [data.categoryId]);
+
     const image = await extractImage(formData);
     const nominee = await NomineeController.createNominee(data, image);
     return customResponse(SuccessCodes.RECORD_CREATED.code, SuccessCodes.RECORD_CREATED.message, 201, nominee);
@@ -55,7 +62,8 @@ const postHandler: AuthedHandler = async (req, _ctx) => {
   }
 };
 
-// Delete nominees by IDs — admin only
+// Delete nominees by IDs — admin/super_admin, or the owning APPROVED
+// organizer. All-or-nothing across the batch.
 const deleteHandler: AuthedHandler = async (req, _ctx) => {
   try {
     const data = await req.json();
@@ -63,6 +71,8 @@ const deleteHandler: AuthedHandler = async (req, _ctx) => {
     if (!Array.isArray(data.ids) || data.ids.length === 0 || !data.ids.every((id: unknown) => typeof id === "string")) {
       throw new CustomAppError( "A non-empty array of string IDs is required", 400, ErrorCodes.ID_REQUIRED.code, ErrorCodes.ID_REQUIRED.label, "bad_request" );
     }
+
+    await assertCanManageNominees({ id: req.user.sub, role: req.user.role }, data.ids);
 
     await NomineeController.deleteNominees(data.ids);
     return customResponse(SuccessCodes.RECORD_DELETED.code, SuccessCodes.RECORD_DELETED.message, 200);
@@ -72,5 +82,5 @@ const deleteHandler: AuthedHandler = async (req, _ctx) => {
 };
 
 export const GET    = withAuth(getHandler);
-export const POST   = withAuth(postHandler, { requireRole: UserRole.ADMIN });
-export const DELETE = withAuth(deleteHandler, { requireRole: UserRole.ADMIN });
+export const POST   = withAuth(postHandler, { requireRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.ORGANIZER] });
+export const DELETE = withAuth(deleteHandler, { requireRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.ORGANIZER] });

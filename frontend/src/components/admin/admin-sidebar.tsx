@@ -4,10 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import { LogOut, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "./auth-provider";
 import { ADMIN_NAV_ITEMS } from "./admin-nav-items";
+import { AccountMenu } from "./account-menu";
 
 function initials(firstName: string, lastName: string): string {
   return `${firstName[0] ?? ""}${lastName[0] ?? ""}`.toUpperCase();
@@ -15,7 +16,7 @@ function initials(firstName: string, lastName: string): string {
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   return (
     <aside className="flex h-full w-64 flex-shrink-0 flex-col border-r border-border/60 bg-surface">
@@ -27,7 +28,7 @@ export function AdminSidebar() {
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {ADMIN_NAV_ITEMS.map((item) => {
+        {ADMIN_NAV_ITEMS.filter((item) => !item.superAdminOnly || user?.role === "super_admin").map((item) => {
           const isActive = item.exact
             ? pathname === item.href
             : pathname.startsWith(item.href);
@@ -70,23 +71,19 @@ export function AdminSidebar() {
         </a>
 
         {user && (
-          <div className="mt-2 flex items-center gap-3 rounded-md px-3 py-2.5">
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-champagne/15 text-xs font-semibold text-champagne">
-              {initials(user.firstName, user.lastName)}
+          <div className="mt-2">
+            <div className="flex items-center gap-3 rounded-md border border-border/60 bg-secondary/30 px-3 py-2.5">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-champagne/15 text-xs font-semibold text-champagne">
+                {initials(user.firstName, user.lastName)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm text-cream">
+                  {user.firstName} {user.lastName}
+                </p>
+                <p className="truncate text-[11px] text-stone">{user.email}</p>
+              </div>
+              <AccountMenu compact />
             </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm text-cream">
-                {user.firstName} {user.lastName}
-              </p>
-              <p className="truncate text-[11px] text-stone">{user.email}</p>
-            </div>
-            <button
-              onClick={logout}
-              aria-label="Log out"
-              className="focus-ring flex-shrink-0 rounded-md p-1.5 text-stone transition hover:bg-secondary hover:text-rose"
-            >
-              <LogOut className="h-4 w-4" />
-            </button>
           </div>
         )}
       </div>

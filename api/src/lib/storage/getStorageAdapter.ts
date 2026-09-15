@@ -1,24 +1,10 @@
-// // src/lib/storage/getStorageAdapter.ts
-// import { ImageStorageAdapter } from "./imageStorage.types";
-// import { LocalDiskStorageAdapter } from "./localDiskStorageAdapter";
-// // import { S3StorageAdapter } from "./s3StorageAdapter"; // add later
-
-// let adapter: ImageStorageAdapter | null = null;
-
-// export function getStorageAdapter(): ImageStorageAdapter {
-//   if (!adapter) {
-//     adapter = new LocalDiskStorageAdapter();
-//     // Later, swap based on env — no caller code changes:
-//     // adapter = process.env.STORAGE_DRIVER === "s3" ? new S3StorageAdapter() : new LocalDiskStorageAdapter();
-//   }
-//   return adapter;
-// }
-
-
-
-
-// //Adapter for cloudinary
 // src/lib/storage/getStorageAdapter.ts
+// Switches storage backend based on STORAGE_DRIVER:
+//   STORAGE_DRIVER=local  -> LocalDiskStorageAdapter (writes to /public/uploads)
+//   anything else/unset   -> CloudinaryStorageAdapter (needs CLOUDINARY_* env vars)
+// Picked once and cached for the life of the process — same pattern as
+// getEmailProvider/getSmsProvider. Changing STORAGE_DRIVER requires a
+// server restart to take effect, it won't hot-swap mid-process.
 import { ImageStorageAdapter } from "./imageStorage.types";
 import { CloudinaryStorageAdapter } from "./cloudinaryStorageAdapter";
 import { LocalDiskStorageAdapter } from "./localDiskStorageAdapter";

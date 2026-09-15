@@ -11,6 +11,8 @@ import { Election } from "./entities/Election";
 import { Nominee } from "./entities/Nominee";
 import { Payment } from "./entities/Payment";
 import { Vote } from "./entities/Vote";
+import { OrganizerProfile } from "./entities/OrganizerProfile";
+import { VerificationToken } from "./entities/VerificationToken";
 
 // Guard against bundler minification renaming entity classes, which
 // corrupts TypeORM's internal dependency graph (targetName = class.name).
@@ -28,6 +30,8 @@ pinName(Election, "Election");
 pinName(Nominee, "Nominee");
 pinName(Payment, "Payment");
 pinName(Vote, "Vote");
+pinName(OrganizerProfile, "OrganizerProfile");
+pinName(VerificationToken, "VerificationToken");
 
 // let dataSource: DataSource | null = null;
 
@@ -53,6 +57,8 @@ pinName(Vote, "Vote");
 //       Payment,
 //       User,
 //       Vote,
+//       OrganizerProfile,
+//       VerificationToken,
 //     ],
 //   });
 
@@ -64,7 +70,7 @@ pinName(Vote, "Vote");
 // };
 
 
-//Production
+// //Production
 declare global {
   // eslint-disable-next-line no-var
   var __appDataSource: DataSource | undefined;
@@ -79,7 +85,17 @@ function buildDataSource() {
     ssl: { rejectUnauthorized: false },
     synchronize: false,
     logging: process.env.NODE_ENV === "development",
-    entities: [AuditLog, Category, Election, Nominee, Payment, User, Vote],
+    entities: [
+      AuditLog,
+      Category,
+      Election,
+      Nominee,
+      Payment,
+      User,
+      Vote,
+      OrganizerProfile,
+      VerificationToken,
+    ],
   });
 }
 

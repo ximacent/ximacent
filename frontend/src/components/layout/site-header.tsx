@@ -29,6 +29,22 @@ export function SiteHeader() {
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
   useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    if (open) {
+      window.addEventListener("keydown", handleEscape);
+    }
+
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [open]);
+
+  useEffect(() => {
     if (pathname !== "/") {
       setActiveSection(null);
       return;
@@ -109,6 +125,9 @@ export function SiteHeader() {
               </Link>
             );
           })}
+          <Button asChild variant="outline" size="sm" className="ml-2">
+            <Link href="/organizer">Organizer portal</Link>
+          </Button>
           <Button
             type="button"
             size="sm"
@@ -162,6 +181,11 @@ export function SiteHeader() {
                 </Link>
               );
             })}
+            <Button asChild variant="outline" className="min-h-11 w-full">
+              <Link href="/organizer" onClick={() => setOpen(false)}>
+                Organizer portal
+              </Link>
+            </Button>
             <Button
               type="button"
               className="mt-2 min-h-11 w-full"

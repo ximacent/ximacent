@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
+import { ShieldCheck, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -14,6 +14,8 @@ import {
 import { UserRoleBadge } from "./user-role-badge";
 import { formatDate } from "@/lib/utils";
 import type { UserSummary } from "@/lib/api/types";
+import { RoleChangeDialog } from "./role-change-dialog";
+import { useState } from "react";
 
 /** Shared with the loading-skeleton table so column widths never shift between states. */
 export function UsersTableHeader({
@@ -65,13 +67,15 @@ export function UsersTable({
   onDeleteOne: (user: UserSummary) => void;
   currentUserId?: string;
 }) {
+  const [roleUser, setRoleUser] = useState<UserSummary | null>(null);
   const selectableUsers = users.filter((u) => u.id !== currentUserId);
   const allOnPageSelected =
     selectableUsers.length > 0 && selectableUsers.every((u) => selectedIds.has(u.id));
   const someOnPageSelected = selectableUsers.some((u) => selectedIds.has(u.id));
 
   return (
-    <Table>
+    <>
+      <Table>
       <UsersTableHeader
         allSelected={allOnPageSelected}
         someSelected={someOnPageSelected}
@@ -112,6 +116,11 @@ export function UsersTable({
               </TableCell>
               <TableCell>
                 <div className="flex items-center justify-end gap-2">
+                  {currentUserId && users.some((item) => item.id === currentUserId && item.role === "super_admin") && (
+                    <Button variant="outline" size="icon" aria-label={`Change role for ${user.firstName} ${user.lastName}`} onClick={() => setRoleUser(user)}>
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="icon"
@@ -129,6 +138,8 @@ export function UsersTable({
           );
         })}
       </TableBody>
-    </Table>
+      </Table>
+      {roleUser && <RoleChangeDialog user={roleUser} open onOpenChange={(open) => !open && setRoleUser(null)} />}
+    </>
   );
 }

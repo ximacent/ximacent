@@ -4,8 +4,11 @@ import { User } from "./User";
 import { Category } from "./Category";
 
 export enum ElectionStatus {
-  DRAFT = "draft",
-  ACTIVE = "active",
+  DRAFT = "draft",                   // organizer editing, not yet submitted
+  PENDING_REVIEW = "pending_review",  // organizer submitted, awaiting admin review
+  APPROVED = "approved",              // admin approved, not yet launched
+  REJECTED = "rejected",              // admin rejected — organizer edits and resubmits
+  ACTIVE = "active",                  // launched, live voting
   CLOSED = "closed",
 }
 
@@ -37,6 +40,12 @@ export class Election extends AppBaseEntity {
 
   @Column({ name: "banner_url", nullable: true })
   bannerUrl?: string;
+
+  // Populated only when status = REJECTED, mirroring OrganizerProfile's
+  // rejectionReason — an organizer needs to know what to fix before
+  // resubmitting.
+  @Column({ name: "rejection_reason", type: "text", nullable: true })
+  rejectionReason?: string;
 
   @ManyToOne(() => User, (user) => user.elections, { nullable: false, onDelete: "RESTRICT" })
   @JoinColumn({ name: "created_by" })

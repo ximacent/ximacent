@@ -12,6 +12,9 @@ import type {
   DashboardActiveElection,
   DashboardTopNominee,
   AttentionItem,
+  OrganizerDashboardResponse,
+  OrganizerDashboardOverview,
+  OrganizerDashboardElection,
 } from "@/types/dashboard.type";
 
 const TREND_WINDOW_DAYS = 30;
@@ -22,6 +25,257 @@ const TOP_NOMINEES_LIMIT = 10;
 const PREVIEW_LIMIT = 5;
 
 export class DashboardService {
+  // ── Organizer-scoped dashboard ───────────────────────────────────
+  // Every query below is filtered by election.created_by = organizerId.
+  // That filter is the security boundary: the organizerId always comes
+  // from the authenticated JWT at the route layer, never from a query
+  // param, so one organizer can't read another's analytics by changing
+  // an id.
+  static async getOrganizerDashboard(organizerId: string): Promise<OrganizerDashboardResponse> {
+    const [overview, revenue, votingActivity, elections, topNominees] = await Promise.all([
+      this.getOrganizerOverview(organizerId),
+      this.getOrganizerRevenue(organizerId),
+      this.getOrganizerVotingActivity(organizerId),
+      this.getOrganizerElections(organizerId),
+      this.getOrganizerTopNominees(organizerId),
+    ]);
+
+    return { overview, revenue, votingActivity, elections, topNominees };
+  }
+
+  private static async getOrganizerOverview(organizerId: string): Promise<OrganizerDashboardOverview> {
+    const db = await AppDataSource();
+
+    const [statusCounts, categoryCount, nomineeCount, votesResult, revenueResult] = await Promise.all([
+      db
+        .getRepository(Election)
+        .createQueryBuilder("election")
+        .select("election.status", "status")
+        .addSelect("COUNT(election.id)", "count")
+        .where("election.created_by = :organizerId", { organizerId })
+        .andWhere("election.isDeleted = false")
+        .groupBy("election.status")
+        .getRawMany<{ status: ElectionStatus; count: string }>(),
+      db
+        .getRepository(Category)
+        .createQueryBuilder("category")
+        .innerJoin("category.election", "election")
+        .where("election.created_by = :organizerId", { organizerId })
+        .andWhere("category.isDeleted = false")
+        .andWhere("election.isDeleted = false")
+        .getCount(),
+      db
+        .getRepository(Nominee)
+        .createQueryBuilder("nominee")
+        .innerJoin("nominee.category", "category")
+        .innerJoin("category.election", "election")
+        .where("election.created_by = :organizerId", { organizerId })
+        .andWhere("nominee.isDeleted = false")
+        .andWhere("election.isDeleted = false")
+        .getCount(),
+      db
+        .getRepository(Vote)
+        .createQueryBuilder("vote")
+        .innerJoin("vote.election", "election")
+        .select("COALESCE(SUM(vote.quantity), 0)", "total")
+        .where("election.created_by = :organizerId", { organizerId })
+        .andWhere("vote.isDeleted = false")
+        .getRawOne<{ total: string }>(),
+      db
+        .getRepository(Payment)
+        .createQueryBuilder("payment")
+        .innerJoin("payment.nominee", "nominee")
+        .innerJoin("nominee.category", "category")
+        .innerJoin("category.election", "election")
+        .select("COALESCE(SUM(payment.amount), 0)", "total")
+        .where("election.created_by = :organizerId", { organizerId })
+        .andWhere("payment.status = :status", { status: PaymentStatus.SUCCESS })
+        .andWhere("payment.isDeleted = false")
+        .getRawOne<{ total: string }>(),
+    ]);
+
+    // Zero-fill every status so the frontend can render a complete
+    // breakdown without checking for missing keys.
+    const electionsByStatus = Object.values(ElectionStatus).reduce(
+      (acc, status) => ({ ...acc, [status]: 0 }),
+      {} as Record<ElectionStatus, number>
+    );
+    let totalElections = 0;
+    for (const row of statusCounts) {
+      const count = parseInt(row.count, 10);
+      electionsByStatus[row.status] = count;
+      totalElections += count;
+    }
+
+    return {
+      totalElections,
+      totalCategories: categoryCount,
+      totalNominees: nomineeCount,
+      totalVotes: parseInt(votesResult?.total ?? "0", 10),
+      totalRevenue: parseFloat(revenueResult?.total ?? "0").toFixed(2),
+      electionsByStatus,
+    };
+  }
+
+  private static async getOrganizerRevenue(organizerId: string) {
+    const db = await AppDataSource();
+
+    const [totalResult, periodRaw] = await Promise.all([
+      db
+        .getRepository(Payment)
+        .createQueryBuilder("payment")
+        .innerJoin("payment.nominee", "nominee")
+        .innerJoin("nominee.category", "category")
+        .innerJoin("category.election", "election")
+        .select("COALESCE(SUM(payment.amount), 0)", "total")
+        .where("election.created_by = :organizerId", { organizerId })
+        .andWhere("payment.status = :status", { status: PaymentStatus.SUCCESS })
+        .andWhere("payment.isDeleted = false")
+        .getRawOne<{ total: string }>(),
+      db
+        .getRepository(Payment)
+        .createQueryBuilder("payment")
+        .innerJoin("payment.nominee", "nominee")
+        .innerJoin("nominee.category", "category")
+        .innerJoin("category.election", "election")
+        .select("DATE(payment.updatedAt)", "date")
+        .addSelect("SUM(payment.amount)", "amount")
+        .where("election.created_by = :organizerId", { organizerId })
+        .andWhere("payment.status = :status", { status: PaymentStatus.SUCCESS })
+        .andWhere("payment.isDeleted = false")
+        .andWhere("payment.updatedAt >= NOW() - INTERVAL '30 days'")
+        .groupBy("DATE(payment.updatedAt)")
+        .orderBy("DATE(payment.updatedAt)", "ASC")
+        .getRawMany<{ date: string; amount: string }>(),
+    ]);
+
+    return {
+      total: parseFloat(totalResult?.total ?? "0").toFixed(2),
+      // Sparse series, same convention as the admin dashboard — the
+      // frontend zero-fills empty days for charting.
+      period: periodRaw.map((r) => ({ date: r.date, amount: parseFloat(r.amount).toFixed(2) })),
+    };
+  }
+
+  private static async getOrganizerVotingActivity(organizerId: string) {
+    const db = await AppDataSource();
+
+    const raw = await db
+      .getRepository(Vote)
+      .createQueryBuilder("vote")
+      .innerJoin("vote.election", "election")
+      .select("DATE(vote.createdAt)", "date")
+      .addSelect("SUM(vote.quantity)", "votes")
+      .where("election.created_by = :organizerId", { organizerId })
+      .andWhere("vote.isDeleted = false")
+      .andWhere("vote.createdAt >= NOW() - INTERVAL '30 days'")
+      .groupBy("DATE(vote.createdAt)")
+      .orderBy("DATE(vote.createdAt)", "ASC")
+      .getRawMany<{ date: string; votes: string }>();
+
+    return raw.map((r) => ({ date: r.date, votes: parseInt(r.votes, 10) }));
+  }
+
+  private static async getOrganizerElections(organizerId: string): Promise<OrganizerDashboardElection[]> {
+    const db = await AppDataSource();
+
+    // Two grouped aggregate queries + one election fetch, then joined in
+    // memory — same approach as getActiveElectionsPerformance, avoiding
+    // N+1 per election.
+    const [voteTotals, revenueTotals, elections] = await Promise.all([
+      db
+        .getRepository(Vote)
+        .createQueryBuilder("vote")
+        .innerJoin("vote.election", "election")
+        .select("vote.election_id", "electionId")
+        .addSelect("SUM(vote.quantity)", "totalVotes")
+        .where("election.created_by = :organizerId", { organizerId })
+        .andWhere("vote.isDeleted = false")
+        .groupBy("vote.election_id")
+        .getRawMany<{ electionId: string; totalVotes: string }>(),
+      db
+        .getRepository(Payment)
+        .createQueryBuilder("payment")
+        .innerJoin("payment.nominee", "nominee")
+        .innerJoin("nominee.category", "category")
+        .innerJoin("category.election", "election")
+        .select("election.id", "electionId")
+        .addSelect("SUM(payment.amount)", "totalRevenue")
+        .where("election.created_by = :organizerId", { organizerId })
+        .andWhere("payment.status = :status", { status: PaymentStatus.SUCCESS })
+        .andWhere("payment.isDeleted = false")
+        .groupBy("election.id")
+        .getRawMany<{ electionId: string; totalRevenue: string }>(),
+      db.getRepository(Election).find({
+        where: { createdBy: { id: organizerId }, isDeleted: false },
+        select: { id: true, title: true, slug: true, status: true, startDate: true, endDate: true, pricePerVote: true },
+        order: { createdAt: "DESC" },
+      }),
+    ]);
+
+    const voteMap = new Map(voteTotals.map((v) => [v.electionId, parseInt(v.totalVotes, 10)]));
+    const revenueMap = new Map(revenueTotals.map((r) => [r.electionId, parseFloat(r.totalRevenue).toFixed(2)]));
+    const now = Date.now();
+
+    return elections.map((e) => {
+      const msRemaining = new Date(e.endDate).getTime() - now;
+      return {
+        id: e.id,
+        title: e.title,
+        slug: e.slug,
+        status: e.status,
+        startDate: e.startDate,
+        endDate: e.endDate,
+        pricePerVote: e.pricePerVote,
+        totalVotes: voteMap.get(e.id) ?? 0,
+        totalRevenue: revenueMap.get(e.id) ?? "0.00",
+        daysRemaining:
+          e.status === ElectionStatus.ACTIVE && msRemaining > 0
+            ? Math.ceil(msRemaining / (1000 * 60 * 60 * 24))
+            : null,
+      };
+    });
+  }
+
+  private static async getOrganizerTopNominees(organizerId: string): Promise<DashboardTopNominee[]> {
+    const db = await AppDataSource();
+
+    const raw = await db
+      .getRepository(Vote)
+      .createQueryBuilder("vote")
+      .innerJoin("vote.nominee", "nominee")
+      .innerJoin("nominee.category", "category")
+      .innerJoin("category.election", "election")
+      .select("nominee.id", "id")
+      .addSelect("nominee.name", "name")
+      .addSelect("nominee.code", "code")
+      .addSelect("nominee.imageUrl", "imageUrl")
+      .addSelect("category.id", "categoryId")
+      .addSelect("category.name", "categoryName")
+      .addSelect("election.id", "electionId")
+      .addSelect("election.title", "electionTitle")
+      .addSelect("SUM(vote.quantity)", "totalVotes")
+      .where("election.created_by = :organizerId", { organizerId })
+      .andWhere("vote.isDeleted = false")
+      .andWhere("nominee.isDeleted = false")
+      .groupBy("nominee.id")
+      .addGroupBy("category.id")
+      .addGroupBy("election.id")
+      .orderBy("totalVotes", "DESC")
+      .limit(TOP_NOMINEES_LIMIT)
+      .getRawMany();
+
+    return raw.map((r) => ({
+      id: r.id,
+      name: r.name,
+      code: r.code,
+      imageUrl: r.imageUrl,
+      totalVotes: parseInt(r.totalVotes, 10),
+      category: { id: r.categoryId, name: r.categoryName },
+      election: { id: r.electionId, title: r.electionTitle },
+    }));
+  }
+
   static async getDashboard(): Promise<DashboardResponse> {
     const db = await AppDataSource();
 

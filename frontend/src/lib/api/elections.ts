@@ -36,10 +36,11 @@ export interface UpdateElectionBody {
 }
 
 export interface UpdateElectionStatusBody {
-  status: "active" | "closed";
+  status: "pending_review" | "approved" | "rejected" | "active" | "closed";
+  rejectionReason?: string;
 }
 
-/** Authenticated election list (admin). */
+/** Authenticated election list. Pass createdById to scope it to one organizer. */
 export function listElections(params: ListElectionsParams = {}) {
   return apiClientWithQuery<ListElectionsResponse>("/api/v1/elections", params);
 }
@@ -66,6 +67,13 @@ export function updateElectionStatus(id: string, body: UpdateElectionStatusBody)
   return apiClient<Election>(`/api/v1/elections/${id}/status`, {
     method: "PATCH",
     body,
+  });
+}
+
+export function overrideElectionStatus(id: string, status: ElectionStatus, reason: string) {
+  return apiClient<Election>(`/api/v1/elections/${id}/override-status`, {
+    method: "PATCH",
+    body: { status, reason },
   });
 }
 

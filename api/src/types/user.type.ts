@@ -1,5 +1,12 @@
 import type { UserRole } from "@/database/entities/User";
 
+// Who is performing a user-management action. Always derived from the
+// JWT (req.user), never trusted from the request body.
+export type UserActor = {
+  id: string;
+  role: UserRole;
+};
+
 // ── Create ───────────────────────────────────────────────────────
 export type CreateUserDTO = {
     firstName: string;

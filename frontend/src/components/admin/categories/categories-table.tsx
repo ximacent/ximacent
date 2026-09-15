@@ -35,6 +35,7 @@ export function CategoriesTable({
   onMoveUp,
   onMoveDown,
   reorderPendingId,
+  detailBasePath = "/admin/categories",
 }: {
   categories: Category[];
   /** Show the "Election" column — only relevant on the global, cross-election list. */
@@ -45,6 +46,7 @@ export function CategoriesTable({
   onMoveUp?: (category: Category, index: number) => void;
   onMoveDown?: (category: Category, index: number) => void;
   reorderPendingId?: string | null;
+  detailBasePath?: string;
 }) {
   const canReorder = Boolean(onMoveUp && onMoveDown);
 
@@ -56,7 +58,7 @@ export function CategoriesTable({
           <TableRow key={category.id}>
             <TableCell>
               <Link
-                href={`/admin/categories/${category.id}`}
+                href={`${detailBasePath}/${category.id}`}
                 className="focus-ring block max-w-[220px] rounded-sm font-medium text-cream hover:text-champagne"
               >
                 <span className="line-clamp-1">{category.name}</span>
@@ -104,7 +106,7 @@ export function CategoriesTable({
             <TableCell>
               <div className="flex items-center justify-end gap-2">
                 <Button variant="outline" size="icon" asChild aria-label={`Manage nominees in ${category.name}`}>
-                  <Link href={`/admin/categories/${category.id}`}>
+                  <Link href={`${detailBasePath}/${category.id}`}>
                     <ListChecks className="h-3.5 w-3.5" />
                   </Link>
                 </Button>

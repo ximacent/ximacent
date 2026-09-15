@@ -1,4 +1,12 @@
 import type { ElectionStatus } from "@/database/entities/Election";
+import type { UserRole } from "@/database/entities/User";
+
+// Who is performing an election mutation. Always derived from the JWT
+// (req.user), never trusted from the request body — see withAuth.
+export type ElectionActor = {
+  id: string;
+  role: UserRole;
+};
 
 // ── Create ───────────────────────────────────────────────────────
 export type CreateElectionDTO = {
@@ -28,4 +36,6 @@ export type FilterElectionDTO = {
 
 export type UpdateElectionStatusDTO = {
     status: ElectionStatus;
+    // Required by the validator when status === REJECTED, ignored otherwise.
+    rejectionReason?: string;
 };

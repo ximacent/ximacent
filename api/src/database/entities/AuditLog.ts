@@ -24,4 +24,10 @@ export class AuditLog {
 
   @Column({ name: "ip_address", nullable: true })
   ipAddress?: string;
+
+  @Column({ name: "user_agent", nullable: true })
+  userAgent?: string;
+
+  @CreateDateColumn({ name: "created_at" })
+  createdAt!: Date;
 }

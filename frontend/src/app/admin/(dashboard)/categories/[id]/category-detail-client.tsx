@@ -33,7 +33,7 @@ type NomineeFormState = { mode: "create" } | { mode: "edit"; nominee: Nominee } 
 
 const CODE_PATTERN = /^[A-Za-z]{3}\d+$/;
 
-export function CategoryDetailClient({ id }: { id: string }) {
+export function CategoryDetailClient({ id, basePath = "/admin", allowedElectionIds, electionDetailSuffix = "/edit" }: { id: string; basePath?: string; allowedElectionIds?: string[]; electionDetailSuffix?: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -77,6 +77,7 @@ export function CategoryDetailClient({ id }: { id: string }) {
         code: search && isCodeSearch ? search : undefined,
       }),
     placeholderData: keepPreviousData,
+    enabled: !allowedElectionIds || Boolean(category?.election?.id && allowedElectionIds.includes(category.election.id)),
   });
 
   const deleteCategoryMutation = useMutation({
@@ -90,7 +91,7 @@ export function CategoryDetailClient({ id }: { id: string }) {
       }
       toast.success("Category deleted");
       if (category?.election?.id) {
-        router.push(`/admin/elections/${category.election.id}/edit`);
+        router.push(`${basePath}/elections/${category.election.id}${electionDetailSuffix}`);
       } else {
         router.push("/admin/categories");
       }
@@ -147,12 +148,17 @@ export function CategoryDetailClient({ id }: { id: string }) {
     );
   }
 
+  const isAllowed = !allowedElectionIds || Boolean(category.election?.id && allowedElectionIds.includes(category.election.id));
+  if (!isAllowed) {
+    return <div className="p-6 md:p-10"><div className="surface-card mt-8"><ErrorState title="Category unavailable" description="This category does not belong to one of your elections." /></div></div>;
+  }
+
   return (
     <div className="p-6 md:p-10">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
         <Link
           href={
-            category.election ? `/admin/elections/${category.election.id}/edit` : "/admin/categories"
+            category.election ? `${basePath}/elections/${category.election.id}${electionDetailSuffix}` : `${basePath}/categories`
           }
           className="focus-ring inline-flex items-center gap-1.5 rounded-sm text-sm text-stone hover:text-cream"
         >

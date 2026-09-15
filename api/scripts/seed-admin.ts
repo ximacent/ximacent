@@ -67,12 +67,14 @@ async function main() {
         lastName,
         email,
         passwordHash,
-        role: UserRole.ADMIN,
+        role: UserRole.SUPER_ADMIN,
         isVerified: true,
+        emailVerified: true,
+        phoneVerified: true,
     });
 
     await repo.save(admin);
-    console.log(`\n✅ Admin created: ${email}`);
+    console.log(`\n✅ Super admin created: ${email}`);
     process.exit(0);
 }
 

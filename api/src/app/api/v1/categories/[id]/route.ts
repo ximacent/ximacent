@@ -7,6 +7,7 @@ import { withAuth, AuthedHandler } from "@/middleware/withAuth";
 import { CustomAppError } from "@/lib/errors/customAppError";
 import { ErrorCodes } from "@/lib/errors/errorCodes";
 import { UserRole } from "@/database/entities/User";
+import { assertCanManageCategories } from "@/lib/authz/electionResourceGuard";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -23,13 +24,16 @@ const getHandler: AuthedHandler = async (_req, ctx) => {
   }
 };
 
-// Update an existing category — admin only
+// Update an existing category — admin/super_admin, or the owning
+// APPROVED organizer.
 const patchHandler: AuthedHandler = async (req, ctx) => {
   try {
     if (!ctx?.params) throw new CustomAppError( "Missing route parameters", 400, ErrorCodes.ID_REQUIRED.code, ErrorCodes.ID_REQUIRED.label, "bad_request" );
 
     const data = await req.json();
     const { id } = await (ctx.params as unknown as RouteContext["params"]);
+    await assertCanManageCategories({ id: req.user.sub, role: req.user.role }, [id]);
+
     const category = await CategoryController.updateCategory(id, data);
     return customResponse(SuccessCodes.RECORD_UPDATED.code, SuccessCodes.RECORD_UPDATED.message, 200, category);
   } catch (error) {
@@ -38,4 +42,4 @@ const patchHandler: AuthedHandler = async (req, ctx) => {
 };
 
 export const GET = withAuth(getHandler);
-export const PATCH = withAuth(patchHandler, { requireRole: UserRole.ADMIN });
+export const PATCH = withAuth(patchHandler, { requireRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.ORGANIZER] });

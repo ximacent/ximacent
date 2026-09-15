@@ -6,6 +6,7 @@ import { withAuth, AuthedHandler } from "@/middleware/withAuth";
 import { UpdateNomineeDTO } from "@/types/nominee.type";
 import { UserRole } from "@/database/entities/User";
 import type { ImageFileInput } from "@/lib/storage/createWithImages";
+import { assertCanManageNominees } from "@/lib/authz/electionResourceGuard";
 
 async function extractImage(formData: FormData): Promise<ImageFileInput | undefined> {
   const file = formData.get("image");
@@ -24,10 +25,13 @@ const getHandler: AuthedHandler = async (_req, ctx) => {
   }
 };
 
-// Update a nominee — admin only. multipart/form-data: name?, bio?, categoryId?, image?
+// Update a nominee — admin/super_admin, or the owning APPROVED organizer.
+// multipart/form-data: name?, bio?, categoryId?, image?
 const patchHandler: AuthedHandler = async (req, ctx) => {
   try {
     const { id } = await ctx!.params;
+    await assertCanManageNominees({ id: req.user.sub, role: req.user.role }, [id]);
+
     const formData = await req.formData();
 
     const data: UpdateNomineeDTO = {
@@ -45,4 +49,4 @@ const patchHandler: AuthedHandler = async (req, ctx) => {
 };
 
 export const GET   = withAuth(getHandler);
-export const PATCH = withAuth(patchHandler, { requireRole: UserRole.ADMIN });
+export const PATCH = withAuth(patchHandler, { requireRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.ORGANIZER] });

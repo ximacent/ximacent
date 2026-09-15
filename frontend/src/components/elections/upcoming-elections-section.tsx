@@ -15,7 +15,7 @@ export function UpcomingElectionsSection() {
   if (!isLoading && !isError && (!data || data.elections.length === 0)) return null;
 
   return (
-    <section className="border-t border-border/40 py-16 md:py-22">
+    <section className="border-t border-border/40 py-16 md:py-22" aria-live="polite">
       <div className="container">
         <div className="mb-8 max-w-2xl">
           <h2 className="font-display text-display-sm text-cream md:text-display-md">
@@ -27,10 +27,11 @@ export function UpcomingElectionsSection() {
         </div>
 
         {isError ? (
-          <div className="surface-card flex flex-col items-center gap-3 p-10 text-center">
+          <div className="surface-card flex flex-col items-center gap-3 p-10 text-center" role="alert">
             <Frown className="h-8 w-8 text-stone" />
             <p className="text-cream-muted">We couldn&apos;t load upcoming elections.</p>
             <button
+              type="button"
               onClick={() => refetch()}
               className="focus-ring rounded text-sm font-medium text-champagne hover:text-champagne-soft"
             >
@@ -38,12 +39,19 @@ export function UpcomingElectionsSection() {
             </button>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {isLoading
-              ? Array.from({ length: 3 }).map((_, i) => <ElectionCardSkeleton key={i} />)
-              : data!.elections.map((election, i) => (
-                  <UpcomingElectionCard key={election.id} election={election} index={i} />
+          <div className="grid auto-rows-fr gap-6 sm:grid-cols-2 lg:grid-cols-3" aria-busy={isLoading}>
+            {isLoading ? (
+              <>
+                <span className="sr-only">Loading upcoming elections</span>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <ElectionCardSkeleton key={i} />
                 ))}
+              </>
+            ) : (
+              data!.elections.map((election, i) => (
+                <UpcomingElectionCard key={election.id} election={election} index={i} />
+              ))
+            )}
           </div>
         )}
       </div>

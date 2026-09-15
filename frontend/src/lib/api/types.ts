@@ -1,7 +1,13 @@
 /** Shared API types matching ximacent-api-reference.md */
 
-export type ElectionStatus = "draft" | "active" | "closed";
-export type UserRole = "admin" | "voter";
+export type ElectionStatus =
+  | "draft"
+  | "pending_review"
+  | "approved"
+  | "rejected"
+  | "active"
+  | "closed";
+export type UserRole = "admin" | "super_admin" | "organizer" | "voter";
 export type PaymentStatus = "pending" | "success" | "failed";
 
 export interface Pagination {
@@ -41,6 +47,8 @@ export interface UserSummary {
   phone?: string;
   role: UserRole;
   isVerified?: boolean;
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -59,6 +67,7 @@ export interface Election {
   pricePerVote: string;
   status: ElectionStatus;
   bannerUrl: string | null;
+  rejectionReason?: string;
   createdBy?: UserSummary;
 }
 

@@ -29,28 +29,30 @@ const getHandler: AuthedHandler = async (req, _ctx) => {
     }
 }
 
-// Create a new user — admin only
+// Create a new user — admin/super_admin (role field itself is further
+// gated inside UserService.create: only super_admin may set admin/super_admin)
 const postHandler: AuthedHandler = async (req, _ctx) => {
     try {
         const data = await req.json();
-        const user = await UserController.createUser(data);
+        const user = await UserController.createUser(data, { id: req.user.sub, role: req.user.role });
         return customResponse(SuccessCodes.RECORD_CREATED.code, SuccessCodes.RECORD_CREATED.message, 201, user);
     } catch (error) {
         return handleError(error)
     }
 }
 
-// Delete users by IDs — admin only
+// Delete users by IDs — admin/super_admin (admin cannot delete another
+// admin/super_admin account, enforced inside UserService.delete)
 const deleteHandler: AuthedHandler = async (req, _ctx) => {
     try {
         const data = await req.json();
-        await UserController.deleteUsers(data.ids);
+        await UserController.deleteUsers(data.ids, { id: req.user.sub, role: req.user.role });
         return customResponse(SuccessCodes.RECORD_DELETED.code, SuccessCodes.RECORD_DELETED.message, 200);
     } catch (error) {
         return handleError(error)
     }
 }
 
-export const GET    = withAuth(getHandler, { requireRole: UserRole.ADMIN })
-export const POST   = withAuth(postHandler, { requireRole: UserRole.ADMIN })
-export const DELETE = withAuth(deleteHandler, { requireRole: UserRole.ADMIN })
+export const GET    = withAuth(getHandler, { requireRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN] })
+export const POST   = withAuth(postHandler, { requireRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN] })
+export const DELETE = withAuth(deleteHandler, { requireRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN] })

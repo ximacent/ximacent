@@ -20,10 +20,13 @@ import { deleteElections, getElection, updateElection } from "@/lib/api/election
 import { ApiError } from "@/lib/api/types";
 import { fromDateTimeLocalValue, formatDateTime, toDateTimeLocalValue } from "@/lib/utils";
 import type { ElectionFormValues } from "@/lib/validation/election";
+import { useAuth } from "@/components/admin/auth-provider";
+import { OverrideStatusDialog } from "@/components/admin/override-status-dialog";
 
 export function EditElectionClient({ id }: { id: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { user: currentUser } = useAuth();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const {
@@ -117,6 +120,9 @@ export function EditElectionClient({ id }: { id: string }) {
             className="mt-6 flex flex-wrap items-center gap-2"
           >
             <ElectionStatusActions election={election} size="default" />
+            {currentUser?.role === "super_admin" && (
+              <OverrideStatusDialog type="election" id={election.id} currentStatus={election.status} />
+            )}
             <Button variant="outline" asChild>
               <a href={`/elections/${election.slug}`} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="h-3.5 w-3.5" />

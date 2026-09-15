@@ -20,7 +20,7 @@ export function ActiveElectionsSection() {
   });
 
   return (
-    <section id="elections" className="border-t border-border/40 py-16 md:py-22">
+    <section id="elections" className="border-t border-border/40 py-16 md:py-22" aria-live="polite">
       <div className="container">
         <div className="mb-8 flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
           <div className="max-w-2xl">
@@ -43,6 +43,7 @@ export function ActiveElectionsSection() {
             />
             {search && (
               <button
+                type="button"
                 onClick={() => setSearch("")}
                 aria-label="Clear search"
                 className="focus-ring absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded text-stone hover:text-cream"
@@ -54,7 +55,12 @@ export function ActiveElectionsSection() {
         </div>
 
         {isLoading && (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div
+            className="grid auto-rows-fr gap-6 sm:grid-cols-2 lg:grid-cols-3"
+            aria-live="polite"
+            aria-busy="true"
+          >
+            <span className="sr-only">Loading active elections</span>
             {Array.from({ length: 3 }).map((_, i) => (
               <ElectionCardSkeleton key={i} />
             ))}
@@ -62,10 +68,11 @@ export function ActiveElectionsSection() {
         )}
 
         {isError && (
-          <div className="surface-card flex flex-col items-center gap-3 p-10 text-center">
+          <div className="surface-card flex flex-col items-center gap-3 p-10 text-center" role="alert">
             <Frown className="h-8 w-8 text-stone" />
             <p className="text-cream-muted">We couldn&apos;t load elections right now.</p>
             <button
+              type="button"
               onClick={() => refetch()}
               className="focus-ring rounded text-sm font-medium text-champagne hover:text-champagne-soft"
             >
@@ -95,6 +102,8 @@ export function ActiveElectionsSection() {
             className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 transition-opacity duration-150 ${
               isFetching ? "opacity-60" : "opacity-100"
             }`}
+            aria-live="polite"
+            aria-busy={isFetching}
           >
             {data.elections.map((election, i) => (
               <ElectionCard

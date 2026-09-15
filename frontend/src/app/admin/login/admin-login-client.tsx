@@ -23,6 +23,12 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
+function destinationForRole(role: string): string {
+  if (role === "organizer") return "/organizer/dashboard";
+  if (role === "admin" || role === "super_admin") return "/admin";
+  return "/";
+}
+
 export function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -44,7 +50,11 @@ export function AdminLoginForm() {
       setUser(result.user);
 
       const redirectTo = searchParams.get("redirectTo");
-      router.replace(redirectTo && redirectTo.startsWith("/admin") ? redirectTo : "/admin");
+      router.replace(
+        redirectTo && redirectTo.startsWith("/admin")
+          ? redirectTo
+          : destinationForRole(result.user.role)
+      );
     } catch (error) {
       const message =
         error instanceof ApiError
@@ -119,6 +129,12 @@ export function AdminLoginForm() {
             )}
           </Button>
         </form>
+
+          <p className="mt-4 text-right text-sm">
+            <Link href="/forgot-password" className="text-champagne hover:text-champagne-soft">
+              Forgot password?
+            </Link>
+          </p>
 
         <p className="mt-6 text-center text-sm text-stone">
           <Link href="/" className="text-champagne hover:text-champagne-soft">

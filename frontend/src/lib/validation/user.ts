@@ -42,4 +42,16 @@ export const createUserFormSchema = z.object({
   password: passwordSchema,
 });
 
+export const profileFormSchema = z.object({
+  firstName: z.string().min(1, "First name is required").max(100, "First name is too long"),
+  lastName: z.string().min(1, "Last name is required").max(100, "Last name is too long"),
+  phone: z
+    .string()
+    .trim()
+    .max(30, "Phone number is too long")
+    .transform((value) => value || "")
+    .pipe(z.string().max(30, "Phone number is too long")),
+});
+
 export type CreateUserFormValues = z.infer<typeof createUserFormSchema>;
+export type ProfileFormValues = z.infer<typeof profileFormSchema>;

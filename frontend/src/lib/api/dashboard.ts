@@ -61,3 +61,43 @@ export interface DashboardData {
 export function getDashboard() {
   return apiClient<DashboardData>("/api/v1/dashboard");
 }
+
+export interface OrganizerDashboardOverview {
+  totalElections: number;
+  totalCategories: number;
+  totalNominees: number;
+  totalVotes: number;
+  totalRevenue: string;
+  electionsByStatus: Record<
+    "draft" | "pending_review" | "approved" | "rejected" | "active" | "closed",
+    number
+  >;
+}
+
+export interface OrganizerDashboardElection {
+  id: string;
+  title: string;
+  slug: string;
+  status: import("./types").ElectionStatus;
+  startDate: string;
+  endDate: string;
+  pricePerVote: string;
+  totalVotes: number;
+  totalRevenue: string;
+  daysRemaining: number | null;
+}
+
+export interface OrganizerDashboardData {
+  overview: OrganizerDashboardOverview;
+  revenue: {
+    total: string;
+    period: Array<{ date: string; amount: string }>;
+  };
+  votingActivity: Array<{ date: string; votes: number }>;
+  elections: OrganizerDashboardElection[];
+  topNominees: DashboardTopNominee[];
+}
+
+export function getOrganizerDashboard() {
+  return apiClient<OrganizerDashboardData>("/api/v1/dashboard/organizer");
+}

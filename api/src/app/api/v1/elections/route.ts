@@ -28,11 +28,14 @@ const getHandler: AuthedHandler = async (req, _ctx) => {
     }
 }
 
-// Create a new election
+// Create a new election — ORGANIZER (must be APPROVED, checked in the
+// service against a fresh DB read) or ADMIN. VOTER is blocked here at the
+// middleware layer, closing the previous gap where any authenticated user
+// could create an election.
 const postHandler: AuthedHandler = async (req, _ctx) => {
     try {
         const data = await req.json();
-        const election = await ElectionController.createElection(data, req.user.sub);
+        const election = await ElectionController.createElection(data, { id: req.user.sub, role: req.user.role });
         return customResponse(SuccessCodes.RECORD_CREATED.code, SuccessCodes.RECORD_CREATED.message, 201, election);
     } catch (error) {
         return handleError(error)
@@ -51,5 +54,5 @@ const deleteHandler: AuthedHandler = async (req, _ctx) => {
 }
 
 export const GET    = withAuth(getHandler)
-export const POST   = withAuth(postHandler)
-export const DELETE = withAuth(deleteHandler, { requireRole: UserRole.ADMIN })
+export const POST   = withAuth(postHandler, { requireRole: [UserRole.ORGANIZER, UserRole.ADMIN, UserRole.SUPER_ADMIN] })
+export const DELETE = withAuth(deleteHandler, { requireRole: [UserRole.ADMIN, UserRole.SUPER_ADMIN] })

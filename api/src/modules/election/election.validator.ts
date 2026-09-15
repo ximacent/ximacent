@@ -31,14 +31,19 @@ export function validateCreateElection(data: CreateElectionDTO) {
   if (!isValidPrice(data.pricePerVote)) { fail("pricePerVote must be a positive number"); }
 }
 
+// Editable while the organizer is still shaping it (DRAFT) or fixing it up
+// after a rejection (REJECTED) — anything after that (submitted/approved/
+// active/closed) is frozen except via the status-transition endpoint.
+const EDITABLE_STATUSES: ElectionStatus[] = [ElectionStatus.DRAFT, ElectionStatus.REJECTED];
+
 export function validateUpdateElection(
   data: UpdateElectionDTO,
   existing: { startDate: Date; endDate: Date; status: ElectionStatus }
 ) {
   if (data.title !== undefined && !data.title?.trim()) { fail("title cannot be empty"); }
 
-  if ((data.startDate || data.endDate) && existing.status !== ElectionStatus.DRAFT) {
-    fail("dates cannot be changed once the election is no longer in draft");
+  if (!EDITABLE_STATUSES.includes(existing.status)) {
+    fail(`Election details cannot be changed while status is "${existing.status}"`);
   }
 
   const startDate = data.startDate ? new Date(data.startDate) : existing.startDate;
@@ -48,28 +53,53 @@ export function validateUpdateElection(
   if (data.endDate && Number.isNaN(new Date(data.endDate).getTime())) { fail("endDate must be a valid date"); }
   if (endDate <= startDate) { fail("endDate must be after startDate"); }
 
-  // this branch is now dead for non-draft since the guard above already fails,
-  // but keep it for the DRAFT case
   if (data.startDate && startDate < new Date()) {
     fail("startDate cannot be in the past");
   }
 
-  if (data.pricePerVote !== undefined) {
-    if (existing.status !== ElectionStatus.DRAFT) {
-      fail("pricePerVote cannot be changed once the election is no longer in draft");
-    }
-    if (!isValidPrice(data.pricePerVote)) { fail("pricePerVote must be a positive number"); }
+  if (data.pricePerVote !== undefined && !isValidPrice(data.pricePerVote)) {
+    fail("pricePerVote must be a positive number");
   }
 }
 
 
+// ── Status state machine ────────────────────────────────────────
+// DRAFT          → PENDING_REVIEW               (organizer submits)
+// PENDING_REVIEW → APPROVED | REJECTED           (admin reviews)
+// REJECTED       → PENDING_REVIEW                (organizer edits + resubmits)
+// APPROVED       → ACTIVE                        (admin launches)
+// ACTIVE         → CLOSED                        (admin closes)
+// CLOSED         → (terminal)
+//
+// Note DRAFT → ACTIVE is not a valid transition at all, for either role —
+// this is what makes "organizer cannot directly activate their own
+// election" a backend guarantee rather than a role check that could be
+// bypassed if the transition existed but was merely gated.
 const VALID_TRANSITIONS: Record<ElectionStatus, ElectionStatus[]> = {
-  [ElectionStatus.DRAFT]: [ElectionStatus.ACTIVE],
+  [ElectionStatus.DRAFT]: [ElectionStatus.PENDING_REVIEW],
+  [ElectionStatus.PENDING_REVIEW]: [ElectionStatus.APPROVED, ElectionStatus.REJECTED],
+  [ElectionStatus.REJECTED]: [ElectionStatus.PENDING_REVIEW],
+  [ElectionStatus.APPROVED]: [ElectionStatus.ACTIVE],
   [ElectionStatus.ACTIVE]: [ElectionStatus.CLOSED],
   [ElectionStatus.CLOSED]: [],
 };
 
-export function validateStatusTransition(election: Election, nextStatus: ElectionStatus) {
+// Which role may *request* each transition. Checked in addition to
+// VALID_TRANSITIONS above and to per-election ownership (checked in the
+// service, which also re-verifies organizer approval status from the DB).
+const ORGANIZER_ALLOWED_TARGETS: ElectionStatus[] = [ElectionStatus.PENDING_REVIEW];
+const ADMIN_ALLOWED_TARGETS: ElectionStatus[] = [
+  ElectionStatus.APPROVED,
+  ElectionStatus.REJECTED,
+  ElectionStatus.ACTIVE,
+  ElectionStatus.CLOSED,
+];
+
+export function validateStatusTransition(
+  election: Election,
+  nextStatus: ElectionStatus,
+  actorRole: "organizer" | "admin"
+) {
   if (!Object.values(ElectionStatus).includes(nextStatus)) {
     fail("Invalid status value");
   }
@@ -78,7 +108,23 @@ export function validateStatusTransition(election: Election, nextStatus: Electio
     fail(`Cannot transition election from "${election.status}" to "${nextStatus}"`);
   }
 
-  if (nextStatus === ElectionStatus.ACTIVE && new Date() > election.endDate) {
-    fail("Cannot activate an election whose endDate has already passed");
+  const allowedTargets = actorRole === "admin" ? ADMIN_ALLOWED_TARGETS : ORGANIZER_ALLOWED_TARGETS;
+  if (!allowedTargets.includes(nextStatus)) {
+    fail(`You are not permitted to move an election to "${nextStatus}"`);
+  }
+
+  if (nextStatus === ElectionStatus.ACTIVE) {
+    if (election.categories && election.categories.length === 0) {
+      fail("Cannot activate an election with no categories");
+    }
+    if (new Date() > election.endDate) {
+      fail("Cannot activate an election whose endDate has already passed");
+    }
+  }
+}
+
+export function validateRejectElection(rejectionReason: string | undefined) {
+  if (!rejectionReason?.trim()) {
+    fail("rejectionReason is required when rejecting an election");
   }
 }
