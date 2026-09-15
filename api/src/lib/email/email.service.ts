@@ -13,6 +13,7 @@ import {
   electionSubmittedTemplate,
   electionApprovedTemplate,
   electionRejectedTemplate,
+  phoneChangedTemplate,
 } from "./templates";
 
 /**
@@ -51,6 +52,10 @@ export class EmailService {
 
   static async sendPasswordChanged(to: string) {
     await this.safeSend(to, passwordChangedTemplate());
+  }
+
+  static async sendPhoneChanged(to: string, newPhone: string) {
+    await this.safeSend(to, phoneChangedTemplate(newPhone));
   }
 
   static async sendOrganizerApplicationSubmitted(to: string) {

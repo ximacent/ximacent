@@ -53,6 +53,22 @@
     background-attachment: fixed;
   }
 
+  [data-sonner-toaster] {
+    z-index: 100;
+    padding-top: max(1rem, env(safe-area-inset-top));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+
+  [data-sonner-toast] {
+    max-width: calc(100vw - 2rem);
+  }
+
+  main[class*="overflow-y-auto"] {
+    scroll-padding-block: 1.5rem;
+  }
+
   h1,
   h2,
   h3 {
@@ -79,12 +95,6 @@
 
   /* Keep dashboard previews compact so lower-priority sections stay reachable. */
   .dashboard-page > .mt-10:nth-child(5) > section > .surface-card {
-    max-height: clamp(16rem, 45vh, 32rem);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-  }
-
-  .dashboard-page > .mt-10:nth-child(4) > section.mt-6 > .surface-card {
     max-height: clamp(16rem, 45vh, 32rem);
     overflow-y: auto;
     overscroll-behavior: contain;

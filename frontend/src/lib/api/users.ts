@@ -47,6 +47,14 @@ export interface VerifyPhoneBody {
   otp: string;
 }
 
+export interface RequestPhoneChangeBody {
+  newPhone: string;
+}
+
+export interface ConfirmPhoneChangeBody {
+  otp: string;
+}
+
 export interface ChangePasswordBody {
   currentPassword: string;
   newPassword: string;
@@ -87,6 +95,20 @@ export function requestPhoneVerification() {
 
 export function verifyPhone(body: VerifyPhoneBody) {
   return apiClient<UserSummary>("/api/v1/auth/verify-phone", {
+    method: "POST",
+    body,
+  });
+}
+
+export function requestPhoneChange(body: RequestPhoneChangeBody) {
+  return apiClient<UserSummary>("/api/v1/auth/request-phone-change", {
+    method: "POST",
+    body,
+  });
+}
+
+export function confirmPhoneChange(body: ConfirmPhoneChangeBody) {
+  return apiClient<UserSummary>("/api/v1/auth/confirm-phone-change", {
     method: "POST",
     body,
   });

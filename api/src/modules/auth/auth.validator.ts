@@ -1,6 +1,6 @@
 import { CustomAppError } from "@/lib/errors/customAppError";
 import { ErrorCodes } from "@/lib/errors/errorCodes";
-import { RegisterDTO, RequestEmailVerificationDTO, VerifyEmailOTPDTO, ChangePasswordDTO, RequestPasswordResetDTO, ResetPasswordDTO } from "@/types/auth.type";
+import { RegisterDTO, RequestEmailVerificationDTO, VerifyEmailOTPDTO, ChangePasswordDTO, RequestPasswordResetDTO, ResetPasswordDTO, RequestPhoneChangeDTO, ConfirmPhoneChangeDTO } from "@/types/auth.type";
 
 function fail(message: string): never {
   throw new CustomAppError(message, 400, ErrorCodes.VALIDATION_FAILED.code, ErrorCodes.VALIDATION_FAILED.label, "validation_failed");
@@ -55,4 +55,13 @@ export function validateResetPassword(data: ResetPasswordDTO) {
   if (!/^\d{6}$/.test(data.otp.trim())) fail("otp must be a 6-digit code");
   if (!data.newPassword) fail("newPassword is required");
   validatePasswordStrength(data.newPassword);
+}
+
+export function validateRequestPhoneChange(data: RequestPhoneChangeDTO) {
+  if (!data.newPhone?.trim()) fail("newPhone is required");
+}
+
+export function validateConfirmPhoneChange(data: ConfirmPhoneChangeDTO) {
+  if (!data.otp?.trim()) fail("otp is required");
+  if (!/^\d{6}$/.test(data.otp.trim())) fail("otp must be a 6-digit code");
 }

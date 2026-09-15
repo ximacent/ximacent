@@ -44,3 +44,12 @@ export type ResetPasswordDTO = {
   otp: string;
   newPassword: string;
 };
+
+// ── Phone change ───────────────────────────────────────────────
+export type RequestPhoneChangeDTO = {
+  newPhone: string;
+};
+
+export type ConfirmPhoneChangeDTO = {
+  otp: string;
+};

@@ -8,11 +8,11 @@ function Toaster({ ...props }: ToasterProps) {
   return (
     <Sonner
       theme="dark"
-      className="toaster group"
+      className="toaster group z-[100]"
       toastOptions={{
         classNames: {
           toast:
-            "group toast group-[.toaster]:bg-card group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-elevated",
+            "group toast w-[calc(100vw-2rem)] max-w-sm group-[.toaster]:bg-card group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-elevated sm:w-auto",
           description: "group-[.toast]:text-muted-foreground",
           actionButton:
             "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",

@@ -38,7 +38,7 @@ export function OrganizerMobileNav() {
   return <>
     <header className="flex items-center justify-between border-b border-border/60 bg-surface px-4 py-3 md:hidden">
       <Image src="/logo.png" alt="Ximacent" width={120} height={24} priority />
-      <div className="flex items-center gap-2">{user && <AccountMenu compact />}<button ref={menuButtonRef} type="button" onClick={() => setOpen(true)} aria-label="Open organizer menu" aria-expanded={open} className="focus-ring rounded-md p-2 text-cream"><Menu className="h-5 w-5" /></button></div>
+      <div className="flex items-center gap-2"><button ref={menuButtonRef} type="button" onClick={() => setOpen(true)} aria-label="Open organizer menu" aria-expanded={open} className="focus-ring rounded-md p-2 text-cream"><Menu className="h-5 w-5" /></button></div>
     </header>
     <AnimatePresence>{open && <>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setOpen(false)} className="fixed inset-0 z-40 bg-ink/70 backdrop-blur-sm md:hidden" />

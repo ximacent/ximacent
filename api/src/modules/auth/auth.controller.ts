@@ -1,5 +1,5 @@
 import { AuthService } from "@/modules/auth/auth.service";
-import type { LoginDTO, RequestEmailVerificationDTO, VerifyEmailOTPDTO, ChangePasswordDTO, RequestPasswordResetDTO, ResetPasswordDTO } from "@/types/auth.type";
+import type { LoginDTO, RequestEmailVerificationDTO, VerifyEmailOTPDTO, ChangePasswordDTO, RequestPasswordResetDTO, ResetPasswordDTO, ConfirmPhoneChangeDTO, RequestPhoneChangeDTO } from "@/types/auth.type";
 
 export class AuthController {
   static async login(data: LoginDTO) {
@@ -40,5 +40,13 @@ export class AuthController {
 
   static async resetPassword(data: ResetPasswordDTO) {
     return await AuthService.resetPassword(data);
+  }
+
+  static async requestPhoneChange(userId: string, data: RequestPhoneChangeDTO) {
+    return await AuthService.requestPhoneChange(userId, data);
+  }
+
+  static async confirmPhoneChange(userId: string, data: ConfirmPhoneChangeDTO) {
+    return await AuthService.confirmPhoneChange(userId, data);
   }
 }

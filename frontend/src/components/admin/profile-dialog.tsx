@@ -15,6 +15,7 @@ import { getUser, updateUser } from "@/lib/api/users";
 import { profileFormSchema, type ProfileFormValues } from "@/lib/validation/user";
 import { useAuth } from "./auth-provider";
 import { ChangePasswordDialog } from "./change-password-dialog";
+import { ChangePhoneDialog } from "./change-phone-dialog";
 
 export function ProfileTriggerButton({
   className,
@@ -54,6 +55,7 @@ export function ProfileDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const { user, setUser } = useAuth();
+  const [changePhoneOpen, setChangePhoneOpen] = useState(false);
 
   const {
     register,
@@ -94,10 +96,11 @@ export function ProfileDialog({
         throw new Error("No authenticated user found");
       }
 
+      const currentUser = profileUser ?? user;
       return updateUser(user.id, {
         firstName: values.firstName,
         lastName: values.lastName,
-        phone: values.phone || undefined,
+        ...(currentUser.phoneVerified ? {} : { phone: values.phone || undefined }),
       });
     },
     onSuccess: (updatedUser) => {
@@ -111,6 +114,7 @@ export function ProfileDialog({
       const message =
         error instanceof ApiError ? error.message : "Something went wrong. Please try again.";
       toast.error("Profile update failed", { description: message });
+      if (error instanceof ApiError && error.message.includes("phone is verified")) setChangePhoneOpen(true);
     },
   });
 
@@ -206,15 +210,14 @@ export function ProfileDialog({
 
             <div className="space-y-2">
               <Label htmlFor="profile-phone">Phone</Label>
-              <Input
-                id="profile-phone"
-                type="tel"
-                placeholder="020 123 4567"
-                disabled={isBusy}
-                autoComplete="tel"
-                {...register("phone")}
-              />
-              {errors.phone && <p className="text-xs text-rose">{errors.phone.message}</p>}
+              {(profileUser ?? user)?.phoneVerified ? (
+                <div className="flex min-h-10 items-center justify-between gap-3 rounded-md border border-border/60 bg-secondary/25 px-3 py-2 text-sm text-stone"><span>{(profileUser ?? user)?.phone || "No phone number"}</span><ChangePhoneDialog open={changePhoneOpen} onOpenChange={setChangePhoneOpen} /></div>
+              ) : (
+                <>
+                  <Input id="profile-phone" type="tel" placeholder="020 123 4567" disabled={isBusy} autoComplete="tel" {...register("phone")} />
+                  {errors.phone && <p className="text-xs text-rose">{errors.phone.message}</p>}
+                </>
+              )}
             </div>
 
             <div className="flex flex-col-reverse gap-3 border-t border-border/60 pt-4 sm:flex-row sm:justify-end">

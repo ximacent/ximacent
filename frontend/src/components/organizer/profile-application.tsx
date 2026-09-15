@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -26,6 +26,7 @@ import {
 import { getUser, updateUser } from "@/lib/api/users";
 import { organizerProfileSchema, type OrganizerProfileFormValues } from "@/lib/validation/organizer";
 import { useAuth } from "@/components/admin/auth-provider";
+import { ChangePhoneDialog } from "@/components/admin/change-phone-dialog";
 
 const STATUS_COPY: Record<OrganizerVerificationStatus, { label: string; description: string; className: string }> = {
   not_started: { label: "Profile not submitted", description: "Complete your profile, then submit it for review.", className: "border-champagne/30 bg-champagne/5 text-champagne" },
@@ -96,6 +97,8 @@ export function ProfileApplication() {
   const [values, setValues] = useState<OrganizerProfileFormValues>(profileValues());
   const [personalPhone, setPersonalPhone] = useState("");
   const [usePersonalPhone, setUsePersonalPhone] = useState(false);
+  const [changePhoneOpen, setChangePhoneOpen] = useState(false);
+  const messageRef = useRef<HTMLDivElement>(null);
   const personalPhoneVerified = accountUserQuery.data?.phoneVerified ?? user?.phoneVerified ?? false;
 
   useEffect(() => {
@@ -113,6 +116,12 @@ export function ProfileApplication() {
       setMissing((current) => current.filter((field) => !isPhoneVerificationRequirement(field)));
     }
   }, [accountUserQuery.data?.phoneVerified]);
+
+  useEffect(() => {
+    if (missing.length > 0) {
+      messageRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [missing.length]);
 
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
@@ -134,7 +143,11 @@ export function ProfileApplication() {
       setMissing([]);
       toast.success("Profile saved", { description: "Your organizer profile has been updated." });
     },
-    onError: (error) => toast.error("Couldn’t save profile", { description: error instanceof ApiError ? error.message : "Something went wrong. Please try again." }),
+    onError: (error) => {
+      const message = error instanceof ApiError ? error.message : "Something went wrong. Please try again.";
+      toast.error("Couldn’t save profile", { description: message });
+      if (error instanceof ApiError && error.message.includes("phone is verified")) setChangePhoneOpen(true);
+    },
   });
 
   const submitMutation = useMutation({
@@ -156,6 +169,7 @@ export function ProfileApplication() {
       const fields = missingFields(message);
       setMissing(fields);
       toast.error("Couldn’t submit application", { description: message });
+      if (error instanceof ApiError && error.message.includes("phone is verified")) setChangePhoneOpen(true);
     },
   });
 
@@ -185,6 +199,7 @@ export function ProfileApplication() {
   function togglePersonalPhone(checked: boolean) {
     setUsePersonalPhone(checked);
     if (checked) setField("organizationPhone", personalPhone.trim());
+    else setField("organizationPhone", "");
   }
 
   return (
@@ -197,16 +212,16 @@ export function ProfileApplication() {
       </div>
 
       {status === "rejected" && profile?.rejectionReason && <div className="mx-5 mt-5 flex gap-3 rounded-md border border-rose/30 bg-rose/5 p-4 text-sm text-rose-soft sm:mx-6"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /><div><p className="font-medium">Reviewer feedback</p><p className="mt-1 leading-relaxed">{profile.rejectionReason}</p></div></div>}
-      {missing.length > 0 && <div className="mx-5 mt-5 rounded-md border border-rose/30 bg-rose/5 p-4 text-sm text-rose-soft sm:mx-6"><p className="font-medium">Complete these items before submitting:</p><ul className="mt-2 space-y-2">{missing.map((field) => <li key={field} className="flex flex-wrap items-center justify-between gap-2"><span className="flex items-center gap-2"><span aria-hidden="true">•</span>{field}</span>{isPhoneVerificationRequirement(field) && <Link href="#phone-verification" className="font-medium text-champagne hover:text-champagne-soft">Verify phone</Link>}</li>)}</ul></div>}
+      {missing.length > 0 && <div ref={messageRef} role="alert" className="mx-5 mt-5 scroll-mt-6 rounded-md border border-rose/30 bg-rose/5 p-4 text-sm text-rose-soft sm:mx-6"><p className="font-medium">Complete these items before submitting:</p><ul className="mt-2 space-y-2">{missing.map((field) => <li key={field} className="flex flex-wrap items-center justify-between gap-2"><span className="flex items-center gap-2"><span aria-hidden="true">•</span>{field}</span>{isPhoneVerificationRequirement(field) && <Link href="#phone-verification" className="font-medium text-champagne hover:text-champagne-soft">Verify phone</Link>}</li>)}</ul></div>}
 
       <div className="space-y-6 p-5 sm:p-6">
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Organization name" id="organization-name" value={values.organizationName ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("organizationName", value)} />
-          <div className="space-y-2"><Label htmlFor="organization-type">Organization type</Label><Select value={values.organizationType} onValueChange={(value) => setField("organizationType", value as OrganizationType)} disabled={locked}><SelectTrigger id="organization-type"><SelectValue placeholder="Choose a type" /></SelectTrigger><SelectContent>{organizationTypes.map((type) => <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>)}</SelectContent></Select>{missing.some((field) => field.toLowerCase().includes("organizationtype")) && <p className="text-xs text-rose">Organization type is required.</p>}</div>
-          <div className="space-y-2"><Label htmlFor="organization-region">Region</Label><Select value={values.region || undefined} onValueChange={(value) => setField("region", value)} disabled={locked}><SelectTrigger id="organization-region" className={missing.some((field) => matchesFieldRequirement(field, "region")) ? "border-rose/70" : undefined}><SelectValue placeholder="Choose a Ghana region" /></SelectTrigger><SelectContent>{ghanaRegions.map((region) => <SelectItem key={region} value={region}>{region}</SelectItem>)}</SelectContent></Select>{missing.some((field) => matchesFieldRequirement(field, "region")) && <p className="text-xs text-rose">Choose a Ghana region.</p>}</div>
+          <div className="space-y-2"><Label htmlFor="organization-type">Organization type</Label><Select value={values.organizationType ?? ""} onValueChange={(value) => setField("organizationType", value as OrganizationType)} disabled={locked}><SelectTrigger id="organization-type"><SelectValue placeholder="Choose a type" /></SelectTrigger><SelectContent>{organizationTypes.map((type) => <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>)}</SelectContent></Select>{missing.some((field) => field.toLowerCase().includes("organizationtype")) && <p className="text-xs text-rose">Organization type is required.</p>}</div>
+          <div className="space-y-2"><Label htmlFor="organization-region">Region</Label><Select value={values.region ?? ""} onValueChange={(value) => setField("region", value)} disabled={locked}><SelectTrigger id="organization-region" className={missing.some((field) => matchesFieldRequirement(field, "region")) ? "border-rose/70" : undefined}><SelectValue placeholder="Choose a Ghana region" /></SelectTrigger><SelectContent>{ghanaRegions.map((region) => <SelectItem key={region} value={region}>{region}</SelectItem>)}</SelectContent></Select>{missing.some((field) => matchesFieldRequirement(field, "region")) && <p className="text-xs text-rose">Choose a Ghana region.</p>}</div>
           <Field label="City" id="organization-city" value={values.city ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("city", value)} />
-          <div className="space-y-2"><Field label="Personal phone number" id="personal-phone" value={personalPhone} disabled={locked || personalPhoneVerified} missing={[]} onChange={setPersonalPhone} />{personalPhoneVerified && <p className="text-xs text-emerald-300">Verified personal numbers cannot be changed here.</p>}<label className="flex items-start gap-2 text-xs text-stone"><input type="checkbox" checked={usePersonalPhone} disabled={locked || !personalPhone.trim()} onChange={(event) => togglePersonalPhone(event.target.checked)} className="mt-0.5 accent-champagne" />Use my personal phone number as the organization phone number.</label></div>
-          <Field label="Organization phone" id="organization-phone" value={values.organizationPhone ?? ""} disabled={locked} missing={missing} onChange={(value) => { setUsePersonalPhone(false); setField("organizationPhone", value); }} />
+          <div className="space-y-2"><Label htmlFor="personal-phone">Personal phone number</Label>{personalPhoneVerified ? <div className="flex min-h-10 items-center justify-between gap-3 rounded-md border border-border/60 bg-secondary/25 px-3 py-2 text-sm text-stone"><span>{personalPhone || "No phone number"}</span><ChangePhoneDialog open={changePhoneOpen} onOpenChange={setChangePhoneOpen} onSuccess={(updatedUser) => setPersonalPhone(updatedUser.phone ?? "")} /></div> : <Input id="personal-phone" type="tel" value={personalPhone} disabled={locked} autoComplete="tel" onChange={(event) => setPersonalPhone(event.target.value)} />}{personalPhoneVerified && <p className="text-xs text-emerald-300">Verified personal numbers cannot be changed here.</p>}</div>
+          <div className="space-y-2"><Field label="Organization phone" id="organization-phone" value={values.organizationPhone ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("organizationPhone", value)} /><label className="flex items-start gap-2 text-xs text-stone"><input type="checkbox" checked={usePersonalPhone} disabled={locked || !personalPhone.trim()} onChange={(event) => togglePersonalPhone(event.target.checked)} className="mt-0.5 accent-champagne" />Use my personal phone number as the organization phone number.</label></div>
           <Field label="Website" id="organization-website" value={values.website ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("website", value)} placeholder="https://example.com" />
           <Field label="Social media URL" id="social-media-url" value={values.socialMediaUrl ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("socialMediaUrl", value)} placeholder="https://instagram.com/..." />
           <Field label="Ghana Card number" id="gh-card-number" value={values.ghCardNumber ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("ghCardNumber", value)} placeholder="GHA-XXXXXXXXX-X" />

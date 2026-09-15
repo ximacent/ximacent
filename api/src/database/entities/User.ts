@@ -47,6 +47,17 @@ export class User extends AppBaseEntity {
   @Column({ name: "phone_verified", default: false })
   phoneVerified!: boolean;
 
+  // Holds a new phone number awaiting OTP confirmation. Once `phone` is
+  // verified, it can no longer be changed directly via the normal
+  // profile-update endpoint (see UserService.update) — a change must go
+  // through request-phone-change -> confirm-phone-change, and `phone`
+  // itself only gets overwritten once the OTP sent to THIS number is
+  // confirmed. Until then, the real `phone`/`phoneVerified` stay
+  // untouched, so there's never a window where the account shows an
+  // unverified number.
+  @Column({ name: "pending_phone", type: "varchar", length: 20, nullable: true })
+  pendingPhone?: string;
+
   @OneToMany(() => Election, (election) => election.createdBy)
   elections!: Relation<Election[]>;
 

@@ -416,6 +416,14 @@ export function passwordChangedTemplate(): Omit<EmailMessage, "to"> {
   };
 }
 
+export function phoneChangedTemplate(newPhone: string): Omit<EmailMessage, "to"> {
+  return {
+    subject: `Your phone number was changed`,
+    text: `Your ${APP_NAME} account phone number was changed to ${newPhone}. If this wasn't you, contact support immediately.`,
+    html: wrap(`<p>Your account phone number was changed to <strong>${newPhone}</strong>.</p><p>If this wasn't you, contact support immediately.</p>`),
+  };
+}
+
 export function organizerApplicationSubmittedTemplate(): Omit<
   EmailMessage,
   "to"

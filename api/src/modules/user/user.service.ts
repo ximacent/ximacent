@@ -192,10 +192,27 @@ export class UserService {
 
     this.assertCanManageTarget(actor, existingUser);
 
+    // A verified phone can never be changed here — it must go through
+    // request-phone-change -> confirm-phone-change (AuthService), which
+    // only ever overwrites `phone` once the OTP sent to the NEW number is
+    // confirmed. This guarantees there's never a window where the account
+    // shows an unverified number as if it were verified. Before the first
+    // verification, phone stays freely editable here (fixing a typo
+    // during onboarding shouldn't require the OTP dance).
+    if (safeData.phone !== undefined && safeData.phone !== existingUser.phone && existingUser.phoneVerified) {
+      throw new CustomAppError(
+        "Your phone number is verified and can't be changed here. Use the change-phone flow instead.",
+        400,
+        ErrorCodes.INVALID_STATE.code,
+        ErrorCodes.INVALID_STATE.label,
+        "phone_change_requires_verification"
+      );
+    }
+
     const updatedUser = repo.merge(existingUser, safeData);
     return this.withoutPassword(await repo.save(updatedUser));
   }
-
+  
   // Blocks any action that would leave zero super_admin accounts — the
   // same "can't lock everyone out of the top tier" rule GitHub orgs / AWS
   // root accounts enforce. Pass the ids of super_admin accounts that are
