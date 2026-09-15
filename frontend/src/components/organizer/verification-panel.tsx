@@ -118,8 +118,6 @@ export function VerificationPanel() {
   });
 
   const emailVerified = statusQuery.data?.emailVerified ?? user?.emailVerified ?? false;
-  const accountUser = accountUserQuery.data ?? user;
-  const accountPhone = accountUser.phone;
   // /organizers/me/status currently omits phoneVerified. The User record is
   // authoritative for this flag; do not fall back to stale localStorage data
   // while the fresh account request is still loading.
@@ -128,6 +126,9 @@ export function VerificationPanel() {
   // Keep the panel visible so verified state is explicit and an organizer
   // never loses the recovery path because cached auth flags are stale.
   if (!user) return null;
+
+  const accountUser = accountUserQuery.data ?? user;
+  const accountPhone = accountUser.phone;
 
   const emailBusy = verifyEmailMutation.isPending || resendEmailMutation.isPending;
   const phoneBusy = verifyPhoneMutation.isPending || requestPhoneMutation.isPending;
