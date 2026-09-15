@@ -56,9 +56,6 @@ export function AdminMobileNav() {
       <header className="flex items-center justify-between border-b border-border/60 bg-surface px-4 py-3 md:hidden">
         <Image src="/logo.png" alt="Ximacent" width={120} height={24} priority />
         <div className="flex items-center gap-2">
-          {user && (
-            <AccountMenu compact />
-          )}
           <button
             ref={menuButtonRef}
             onClick={() => setOpen(true)}

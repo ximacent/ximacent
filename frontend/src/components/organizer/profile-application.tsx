@@ -26,7 +26,6 @@ import {
 import { getUser, updateUser } from "@/lib/api/users";
 import { organizerProfileSchema, type OrganizerProfileFormValues } from "@/lib/validation/organizer";
 import { useAuth } from "@/components/admin/auth-provider";
-import { ChangePhoneDialog } from "@/components/admin/change-phone-dialog";
 
 const STATUS_COPY: Record<OrganizerVerificationStatus, { label: string; description: string; className: string }> = {
   not_started: { label: "Profile not submitted", description: "Complete your profile, then submit it for review.", className: "border-champagne/30 bg-champagne/5 text-champagne" },
@@ -112,7 +111,6 @@ export function ProfileApplication() {
   const [values, setValues] = useState<OrganizerProfileFormValues>(profileValues());
   const [personalPhone, setPersonalPhone] = useState("");
   const [usePersonalPhone, setUsePersonalPhone] = useState(false);
-  const [changePhoneOpen, setChangePhoneOpen] = useState(false);
   const messageRef = useRef<HTMLDivElement>(null);
   const personalPhoneVerified = accountUserQuery.data?.phoneVerified ?? user?.phoneVerified ?? false;
 
@@ -161,7 +159,6 @@ export function ProfileApplication() {
     onError: (error) => {
       const message = error instanceof ApiError ? error.message : "Something went wrong. Please try again.";
       toast.error("Couldn’t save profile", { description: message });
-      if (error instanceof ApiError && error.message.includes("phone is verified")) setChangePhoneOpen(true);
     },
   });
 
@@ -184,7 +181,6 @@ export function ProfileApplication() {
       const fields = missingFields(message);
       setMissing(fields);
       toast.error("Couldn’t submit application", { description: message });
-      if (error instanceof ApiError && error.message.includes("phone is verified")) setChangePhoneOpen(true);
     },
   });
 
@@ -235,7 +231,6 @@ export function ProfileApplication() {
           <div className="space-y-2"><Label htmlFor="organization-type">Organization type</Label><Select value={values.organizationType ?? ""} onValueChange={(value) => setField("organizationType", value as OrganizationType)} disabled={locked}><SelectTrigger id="organization-type"><SelectValue placeholder="Choose a type" /></SelectTrigger><SelectContent>{organizationTypes.map((type) => <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>)}</SelectContent></Select>{missing.some((field) => field.toLowerCase().includes("organizationtype")) && <p className="text-xs text-rose">Organization type is required.</p>}</div>
           <div className="space-y-2"><Label htmlFor="organization-region">Region</Label><Select value={values.region ?? ""} onValueChange={(value) => setField("region", value)} disabled={locked}><SelectTrigger id="organization-region" className={missing.some((field) => matchesFieldRequirement(field, "region")) ? "border-rose/70" : undefined}><SelectValue placeholder="Choose a Ghana region" /></SelectTrigger><SelectContent>{ghanaRegions.map((region) => <SelectItem key={region} value={region}>{region}</SelectItem>)}</SelectContent></Select>{missing.some((field) => matchesFieldRequirement(field, "region")) && <p className="text-xs text-rose">Choose a Ghana region.</p>}</div>
           <Field label="City" id="organization-city" value={values.city ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("city", value)} />
-          <div className="space-y-2"><Label htmlFor="personal-phone">Personal phone number</Label>{personalPhoneVerified ? <div className="flex min-h-10 items-center justify-between gap-3 rounded-md border border-border/60 bg-secondary/25 px-3 py-2 text-sm text-stone"><span>{personalPhone || "No phone number"}</span><ChangePhoneDialog open={changePhoneOpen} onOpenChange={setChangePhoneOpen} onSuccess={(updatedUser) => setPersonalPhone(updatedUser.phone ?? "")} /></div> : <Input id="personal-phone" type="tel" value={personalPhone} disabled={locked} autoComplete="tel" onChange={(event) => setPersonalPhone(event.target.value)} />}{personalPhoneVerified && <p className="text-xs text-emerald-300">Verified personal numbers cannot be changed here.</p>}</div>
           <div className="space-y-2"><Field label="Organization phone" id="organization-phone" value={values.organizationPhone ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("organizationPhone", value)} /><label className="flex items-start gap-2 text-xs text-stone"><input type="checkbox" checked={usePersonalPhone} disabled={locked || !personalPhone.trim()} onChange={(event) => togglePersonalPhone(event.target.checked)} className="mt-0.5 accent-champagne" />Use my personal phone number as the organization phone number.</label></div>
           <Field label="Website" id="organization-website" value={values.website ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("website", value)} placeholder="https://example.com" />
           <Field label="Social media URL" id="social-media-url" value={values.socialMediaUrl ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("socialMediaUrl", value)} placeholder="https://instagram.com/..." />
