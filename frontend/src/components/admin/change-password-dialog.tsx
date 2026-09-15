@@ -56,7 +56,7 @@ export function ChangePasswordDialog({ trigger, open: controlledOpen, onOpenChan
 
   return (
     <>
-      {trigger ?? (
+      {trigger !== undefined ? trigger : (
         <Button type="button" variant="ghost" onClick={() => setOpen(true)} disabled={mutation.isPending}>
           <KeyRound className="h-4 w-4" />
           Change password

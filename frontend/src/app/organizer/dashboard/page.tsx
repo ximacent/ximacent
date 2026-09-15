@@ -19,7 +19,7 @@ export default function OrganizerDashboardPage() {
   });
 
   return (
-    <div className="p-6 md:p-10">
+    <div className="dashboard-page p-6 md:p-10">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div><p className="text-xs font-semibold uppercase tracking-wider text-champagne">Organizer workspace</p><h1 className="mt-2 font-display text-display-md text-cream">Welcome{user ? `, ${user.firstName}` : ""}</h1><p className="mt-2 text-stone">Manage your elections and track activity from one place.</p></div>
         <div className="flex flex-wrap gap-2"><Button asChild variant="outline" size="sm"><Link href="/"><ArrowRight className="h-3.5 w-3.5" />Public site</Link></Button>{status?.canCreateElection && <Button asChild size="sm"><Link href="/organizer/dashboard/elections/new"><Plus className="h-4 w-4" />New election</Link></Button>}</div>

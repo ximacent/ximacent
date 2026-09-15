@@ -26,7 +26,7 @@ export class User extends AppBaseEntity {
   @Column({ name: "password_hash", nullable: false })
   passwordHash!: string;
 
-  @Column({ type: "varchar", length: 20, nullable: true })
+  @Column({ type: "varchar", length: 20, nullable: false })
   phone?: string;
 
   @Column({ type: "enum", enum: UserRole, default: UserRole.VOTER })

@@ -84,6 +84,12 @@
     overscroll-behavior: contain;
   }
 
+  .dashboard-page > .mt-10:nth-child(4) > section.mt-6 > .surface-card {
+    max-height: clamp(16rem, 45vh, 32rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
   .dashboard-page p.truncate {
     overflow: visible;
     overflow-wrap: anywhere;

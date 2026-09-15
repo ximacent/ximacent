@@ -23,7 +23,7 @@ import {
   type OrganizerVerificationStatus,
   type OrganizationType,
 } from "@/lib/api/organizers";
-import { getUser } from "@/lib/api/users";
+import { getUser, updateUser } from "@/lib/api/users";
 import { organizerProfileSchema, type OrganizerProfileFormValues } from "@/lib/validation/organizer";
 import { useAuth } from "@/components/admin/auth-provider";
 
@@ -38,6 +38,11 @@ const STATUS_COPY: Record<OrganizerVerificationStatus, { label: string; descript
 const organizationTypes: Array<{ value: OrganizationType; label: string }> = [
   { value: "individual", label: "Individual" }, { value: "company", label: "Company" }, { value: "ngo", label: "NGO" },
   { value: "school", label: "School" }, { value: "church", label: "Church" }, { value: "government", label: "Government" }, { value: "other", label: "Other" },
+];
+
+const ghanaRegions = [
+  "Ahafo", "Ashanti", "Bono", "Bono East", "Central", "Eastern", "Greater Accra", "North East",
+  "Northern", "Oti", "Savannah", "Upper East", "Upper West", "Volta", "Western", "Western North",
 ];
 
 function profileValues(profile?: OrganizerProfile): OrganizerProfileFormValues {
@@ -89,10 +94,19 @@ export function ProfileApplication() {
   const locked = status === "approved" || status === "suspended";
   const statusCopy = STATUS_COPY[status];
   const [values, setValues] = useState<OrganizerProfileFormValues>(profileValues());
+  const [personalPhone, setPersonalPhone] = useState("");
+  const [usePersonalPhone, setUsePersonalPhone] = useState(false);
+  const personalPhoneVerified = accountUserQuery.data?.phoneVerified ?? user?.phoneVerified ?? false;
 
   useEffect(() => {
     if (profile) setValues(profileValues(profile));
   }, [profile]);
+
+  useEffect(() => {
+    const phone = accountUserQuery.data?.phone ?? user?.phone ?? "";
+    setPersonalPhone(phone);
+    if (phone && profile?.organizationPhone === phone) setUsePersonalPhone(true);
+  }, [accountUserQuery.data?.phone, profile?.organizationPhone, user?.phone]);
 
   useEffect(() => {
     if (accountUserQuery.data?.phoneVerified) {
@@ -103,7 +117,15 @@ export function ProfileApplication() {
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
   const updateMutation = useMutation({
-    mutationFn: () => updateMyOrganizerProfile(values, image),
+    mutationFn: async () => {
+      const parsed = organizerProfileSchema.safeParse(values);
+      if (!parsed.success) throw new ApiError(parsed.error.issues[0]?.message ?? "Check your profile details", 400, { code: "validation_failed", label: "validation_failed", key: "validation_failed" });
+      if (!personalPhoneVerified) {
+        const updatedUser = await updateUser(user!.id, { phone: personalPhone.trim() });
+        queryClient.setQueryData(["current-user-profile", user!.id], updatedUser);
+      }
+      return updateMyOrganizerProfile({ ...values, organizationPhone: usePersonalPhone ? personalPhone.trim() : values.organizationPhone }, image);
+    },
     onSuccess: (updated) => {
       queryClient.setQueryData(["organizer-profile"], updated);
       setValues(profileValues(updated));
@@ -116,7 +138,13 @@ export function ProfileApplication() {
   });
 
   const submitMutation = useMutation({
-    mutationFn: submitOrganizerApplication,
+    mutationFn: async () => {
+      const parsed = organizerProfileSchema.safeParse(values);
+      if (!parsed.success) throw new ApiError(parsed.error.issues[0]?.message ?? "Check your profile details", 400, { code: "validation_failed", label: "validation_failed", key: "validation_failed" });
+      if (!personalPhoneVerified) await updateUser(user!.id, { phone: personalPhone.trim() });
+      await updateMyOrganizerProfile({ ...values, organizationPhone: usePersonalPhone ? personalPhone.trim() : values.organizationPhone }, image);
+      return submitOrganizerApplication();
+    },
     onSuccess: (updated) => {
       queryClient.setQueryData(["organizer-profile"], updated);
       queryClient.invalidateQueries({ queryKey: ["organizer-status"] });
@@ -149,9 +177,14 @@ export function ProfileApplication() {
   }
 
   function save() {
-    const parsed = organizerProfileSchema.safeParse(values);
+    const parsed = organizerProfileSchema.safeParse({ ...values, organizationPhone: usePersonalPhone ? personalPhone.trim() : values.organizationPhone });
     if (!parsed.success) { toast.error("Check your profile details", { description: parsed.error.issues[0]?.message }); return; }
     updateMutation.mutate();
+  }
+
+  function togglePersonalPhone(checked: boolean) {
+    setUsePersonalPhone(checked);
+    if (checked) setField("organizationPhone", personalPhone.trim());
   }
 
   return (
@@ -170,9 +203,10 @@ export function ProfileApplication() {
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Organization name" id="organization-name" value={values.organizationName ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("organizationName", value)} />
           <div className="space-y-2"><Label htmlFor="organization-type">Organization type</Label><Select value={values.organizationType} onValueChange={(value) => setField("organizationType", value as OrganizationType)} disabled={locked}><SelectTrigger id="organization-type"><SelectValue placeholder="Choose a type" /></SelectTrigger><SelectContent>{organizationTypes.map((type) => <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>)}</SelectContent></Select>{missing.some((field) => field.toLowerCase().includes("organizationtype")) && <p className="text-xs text-rose">Organization type is required.</p>}</div>
-          <Field label="Region" id="organization-region" value={values.region ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("region", value)} />
+          <div className="space-y-2"><Label htmlFor="organization-region">Region</Label><Select value={values.region || undefined} onValueChange={(value) => setField("region", value)} disabled={locked}><SelectTrigger id="organization-region" className={missing.some((field) => matchesFieldRequirement(field, "region")) ? "border-rose/70" : undefined}><SelectValue placeholder="Choose a Ghana region" /></SelectTrigger><SelectContent>{ghanaRegions.map((region) => <SelectItem key={region} value={region}>{region}</SelectItem>)}</SelectContent></Select>{missing.some((field) => matchesFieldRequirement(field, "region")) && <p className="text-xs text-rose">Choose a Ghana region.</p>}</div>
           <Field label="City" id="organization-city" value={values.city ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("city", value)} />
-          <Field label="Organization phone" id="organization-phone" value={values.organizationPhone ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("organizationPhone", value)} />
+          <div className="space-y-2"><Field label="Personal phone number" id="personal-phone" value={personalPhone} disabled={locked || personalPhoneVerified} missing={[]} onChange={setPersonalPhone} />{personalPhoneVerified && <p className="text-xs text-emerald-300">Verified personal numbers cannot be changed here.</p>}<label className="flex items-start gap-2 text-xs text-stone"><input type="checkbox" checked={usePersonalPhone} disabled={locked || !personalPhone.trim()} onChange={(event) => togglePersonalPhone(event.target.checked)} className="mt-0.5 accent-champagne" />Use my personal phone number as the organization phone number.</label></div>
+          <Field label="Organization phone" id="organization-phone" value={values.organizationPhone ?? ""} disabled={locked} missing={missing} onChange={(value) => { setUsePersonalPhone(false); setField("organizationPhone", value); }} />
           <Field label="Website" id="organization-website" value={values.website ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("website", value)} placeholder="https://example.com" />
           <Field label="Social media URL" id="social-media-url" value={values.socialMediaUrl ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("socialMediaUrl", value)} placeholder="https://instagram.com/..." />
           <Field label="Ghana Card number" id="gh-card-number" value={values.ghCardNumber ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("ghCardNumber", value)} placeholder="GHA-XXXXXXXXX-X" />

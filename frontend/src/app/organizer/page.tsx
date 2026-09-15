@@ -35,9 +35,9 @@ type LoginValues = z.infer<typeof loginSchema>;
 type RegisterValues = z.infer<typeof registerSchema>;
 type Mode = "login" | "register";
 
-function destinationForRole(role: string): string {
-  if (role === "organizer") return "/organizer/dashboard";
-  if (role === "admin" || role === "super_admin") return "/admin";
+function destinationForUser(user: { role: string; emailVerified?: boolean }): string {
+  if (user.role === "organizer") return user.emailVerified ? "/organizer/dashboard" : "/organizer/verify-email";
+  if (user.role === "admin" || user.role === "super_admin") return "/admin";
   return "/";
 }
 
@@ -55,7 +55,7 @@ export default function OrganizerPortalPage() {
     try {
       const result = await login(values);
       setUser(result.user);
-      router.replace(destinationForRole(result.user.role));
+      router.replace(destinationForUser(result.user));
     } catch (error) {
       const message = error instanceof ApiError ? error.message : "Something went wrong. Please try again.";
       toast.error("Sign in failed", { description: message });
@@ -69,9 +69,9 @@ export default function OrganizerPortalPage() {
       const result = await register({ ...values, role: "organizer" });
       setUser(result.user);
       toast.success("Organizer account created", {
-        description: "Your account is ready. Complete your verification and profile next.",
+        description: "Check your inbox to verify your email before entering the workspace.",
       });
-      router.replace(destinationForRole(result.user.role));
+      router.replace(destinationForUser(result.user));
     } catch (error) {
       const message = error instanceof ApiError ? error.message : "Something went wrong. Please try again.";
       toast.error("Registration failed", { description: message });
