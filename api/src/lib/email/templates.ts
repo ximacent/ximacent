@@ -308,7 +308,7 @@ export function emailVerifiedConfirmationTemplate(): Omit<
       `
         ${heading(
           "Email verified",
-          "Your ${APP_NAME} account is now ready."
+          `Your ${APP_NAME} account is now ready.`
         )}
 
         ${paragraph(
@@ -392,7 +392,7 @@ export function passwordChangedTemplate(): Omit<EmailMessage, "to"> {
       `
         ${heading(
           "Password changed",
-          "Your ${APP_NAME} account password was recently updated."
+          `Your ${APP_NAME} account password was recently updated.`
         )}
 
         ${paragraph(
@@ -426,7 +426,7 @@ export function phoneChangedTemplate(
       `
         ${heading(
           "Phone number changed",
-          "Your ${APP_NAME} account phone number was recently updated."
+          `Your ${APP_NAME} account phone number was recently updated.`
         )}
 
         <div style="
@@ -489,7 +489,7 @@ export function emailChangedTemplate(
       `
         ${heading(
           "Email address changed",
-          "Your ${APP_NAME} account email address was recently updated."
+          `Your ${APP_NAME} account email address was recently updated.`
         )}
 
         <div style="
