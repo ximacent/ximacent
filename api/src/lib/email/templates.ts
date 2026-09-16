@@ -275,7 +275,7 @@ export function emailVerificationOTPTemplate(
       `
         ${heading(
           "Verify your email",
-          "Use the verification code below to complete your ${APP_NAME} account setup."
+          `Use the verification code below to complete your ${APP_NAME} account setup.`
         )}
 
         ${paragraph("Your verification code is:")}
@@ -336,7 +336,7 @@ export function roleChangedTemplate(
       `
         ${heading(
           "Account role updated",
-          "There has been a change to your ${APP_NAME} account."
+          `There has been a change to your ${APP_NAME} account.`
         )}
 
         ${paragraph(
@@ -364,7 +364,7 @@ export function passwordResetOTPTemplate(
       `
         ${heading(
           "Reset your password",
-          "Use the code below to continue resetting your ${APP_NAME} password."
+          `Use the code below to continue resetting your ${APP_NAME} password.`
         )}
 
         ${otpBlock(otp)}
@@ -523,7 +523,7 @@ export function emailChangedTemplate(
         </div>
 
         ${paragraph(
-          "You'll need to use this new email address to log in to your ${APP_NAME} account from now on."
+          `You'll need to use this new email address to log in to your ${APP_NAME} account from now on.`
         )}
 
         ${paragraph(
@@ -746,7 +746,7 @@ export function electionSubmittedTemplate(
       `
         ${heading(
           "Election submitted",
-          "Your election has been sent to the ${APP_NAME} admin team for review."
+          `Your election has been sent to the ${APP_NAME} admin team for review.`
         )}
 
         <div style="
