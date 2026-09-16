@@ -416,11 +416,126 @@ export function passwordChangedTemplate(): Omit<EmailMessage, "to"> {
   };
 }
 
-export function phoneChangedTemplate(newPhone: string): Omit<EmailMessage, "to"> {
+export function phoneChangedTemplate(
+  newPhone: string
+): Omit<EmailMessage, "to"> {
   return {
     subject: `Your phone number was changed`,
     text: `Your ${APP_NAME} account phone number was changed to ${newPhone}. If this wasn't you, contact support immediately.`,
-    html: wrap(`<p>Your account phone number was changed to <strong>${newPhone}</strong>.</p><p>If this wasn't you, contact support immediately.</p>`),
+    html: wrap(
+      `
+        ${heading(
+          "Phone number changed",
+          "Your ${APP_NAME} account phone number was recently updated."
+        )}
+
+        <div style="
+          margin:26px 0;
+          padding:20px;
+          background-color:#1c1815;
+          border:1px solid #3a3027;
+          border-radius:10px;
+        ">
+          <div style="
+            font-size:11px;
+            font-weight:600;
+            letter-spacing:1.5px;
+            text-transform:uppercase;
+            color:#968b80;
+            margin-bottom:8px;
+          ">
+            New phone number
+          </div>
+
+          <div style="
+            font-family:Arial,sans-serif;
+            font-size:18px;
+            line-height:28px;
+            font-weight:600;
+            color:#f0e7dc;
+          ">
+            ${newPhone}
+          </div>
+        </div>
+
+        ${paragraph(
+          "If you made this change, no further action is required."
+        )}
+
+        ${paragraph(
+          `${strong(
+            "If this wasn't you, contact support immediately."
+          )}`
+        )}
+      `,
+      {
+        preheader: `Your ${APP_NAME} phone number was changed.`,
+      }
+    ),
+  };
+}
+
+// Sent to the OLD email address once a change completes — the old
+// address is still the stable, previously-verified channel at the moment
+// this fires, same reasoning as phoneChangedTemplate going out before the
+// old email could be considered stale.
+export function emailChangedTemplate(
+  newEmail: string
+): Omit<EmailMessage, "to"> {
+  return {
+    subject: `Your account email was changed`,
+    text: `Your ${APP_NAME} account email was changed to ${newEmail}. You'll need to use the new email to log in from now on. If this wasn't you, contact support immediately.`,
+    html: wrap(
+      `
+        ${heading(
+          "Email address changed",
+          "Your ${APP_NAME} account email address was recently updated."
+        )}
+
+        <div style="
+          margin:26px 0;
+          padding:20px;
+          background-color:#1c1815;
+          border:1px solid #3a3027;
+          border-radius:10px;
+        ">
+          <div style="
+            font-size:11px;
+            font-weight:600;
+            letter-spacing:1.5px;
+            text-transform:uppercase;
+            color:#968b80;
+            margin-bottom:8px;
+          ">
+            New email address
+          </div>
+
+          <div style="
+            font-family:Arial,sans-serif;
+            font-size:17px;
+            line-height:28px;
+            font-weight:600;
+            color:#f0e7dc;
+            word-break:break-word;
+          ">
+            ${newEmail}
+          </div>
+        </div>
+
+        ${paragraph(
+          "You'll need to use this new email address to log in to your ${APP_NAME} account from now on."
+        )}
+
+        ${paragraph(
+          `${strong(
+            "If this wasn't you, contact support immediately."
+          )}`
+        )}
+      `,
+      {
+        preheader: `Your ${APP_NAME} account email address was changed.`,
+      }
+    ),
   };
 }
 

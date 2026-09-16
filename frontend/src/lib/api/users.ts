@@ -55,6 +55,14 @@ export interface ConfirmPhoneChangeBody {
   otp: string;
 }
 
+export interface RequestEmailChangeBody {
+  newEmail: string;
+}
+
+export interface ConfirmEmailChangeBody {
+  otp: string;
+}
+
 export interface ChangePasswordBody {
   currentPassword: string;
   newPassword: string;
@@ -109,6 +117,20 @@ export function requestPhoneChange(body: RequestPhoneChangeBody) {
 
 export function confirmPhoneChange(body: ConfirmPhoneChangeBody) {
   return apiClient<UserSummary>("/api/v1/auth/confirm-phone-change", {
+    method: "POST",
+    body,
+  });
+}
+
+export function requestEmailChange(body: RequestEmailChangeBody) {
+  return apiClient<UserSummary>("/api/v1/auth/request-email-change", {
+    method: "POST",
+    body,
+  });
+}
+
+export function confirmEmailChange(body: ConfirmEmailChangeBody) {
+  return apiClient<UserSummary>("/api/v1/auth/confirm-email-change", {
     method: "POST",
     body,
   });

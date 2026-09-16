@@ -1,6 +1,6 @@
 import { CustomAppError } from "@/lib/errors/customAppError";
 import { ErrorCodes } from "@/lib/errors/errorCodes";
-import { RegisterDTO, RequestEmailVerificationDTO, VerifyEmailOTPDTO, ChangePasswordDTO, RequestPasswordResetDTO, ResetPasswordDTO, RequestPhoneChangeDTO, ConfirmPhoneChangeDTO } from "@/types/auth.type";
+import { RegisterDTO, RequestEmailVerificationDTO, VerifyEmailOTPDTO, ChangePasswordDTO, RequestPasswordResetDTO, ResetPasswordDTO, RequestPhoneChangeDTO, ConfirmPhoneChangeDTO, ConfirmEmailChangeDTO, RequestEmailChangeDTO } from "@/types/auth.type";
 
 function fail(message: string): never {
   throw new CustomAppError(message, 400, ErrorCodes.VALIDATION_FAILED.code, ErrorCodes.VALIDATION_FAILED.label, "validation_failed");
@@ -62,6 +62,16 @@ export function validateRequestPhoneChange(data: RequestPhoneChangeDTO) {
 }
 
 export function validateConfirmPhoneChange(data: ConfirmPhoneChangeDTO) {
+  if (!data.otp?.trim()) fail("otp is required");
+  if (!/^\d{6}$/.test(data.otp.trim())) fail("otp must be a 6-digit code");
+}
+
+export function validateRequestEmailChange(data: RequestEmailChangeDTO) {
+  if (!data.newEmail?.trim()) fail("newEmail is required");
+  if (!EMAIL_REGEX.test(data.newEmail.trim())) fail("newEmail must be a valid email address");
+}
+
+export function validateConfirmEmailChange(data: ConfirmEmailChangeDTO) {
   if (!data.otp?.trim()) fail("otp is required");
   if (!/^\d{6}$/.test(data.otp.trim())) fail("otp must be a 6-digit code");
 }

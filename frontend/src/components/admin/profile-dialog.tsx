@@ -16,6 +16,7 @@ import { profileFormSchema, type ProfileFormValues } from "@/lib/validation/user
 import { useAuth } from "./auth-provider";
 import { ChangePasswordDialog } from "./change-password-dialog";
 import { ChangePhoneDialog } from "./change-phone-dialog";
+import { ChangeEmailDialog } from "./change-email-dialog";
 
 export function ProfileTriggerButton({
   className,
@@ -196,15 +197,12 @@ export function ProfileDialog({
 
             <div className="space-y-2">
               <Label htmlFor="profile-email">Email</Label>
-              <div className="relative">
-                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone" />
-                <Input
-                  id="profile-email"
-                  type="email"
-                  value={user?.email ?? ""}
-                  readOnly
-                  className="pl-9 bg-secondary/25 text-stone"
-                />
+              <div className="flex min-h-10 items-center justify-between gap-3 rounded-md border border-border/60 bg-secondary/25 px-3 py-2 text-sm text-stone">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Mail className="h-4 w-4 shrink-0 text-stone" />
+                  <span className="truncate">{user?.email ?? ""}</span>
+                </div>
+                <ChangeEmailDialog />
               </div>
             </div>
 

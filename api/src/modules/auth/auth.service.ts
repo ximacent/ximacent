@@ -18,6 +18,8 @@ import {
   validateResetPassword,
   validateConfirmPhoneChange,
   validateRequestPhoneChange,
+  validateConfirmEmailChange,
+  validateRequestEmailChange,
 } from "./auth.validator";
 import { EmailService } from "@/lib/email/email.service";
 import { SmsService } from "@/lib/sms/sms.service";
@@ -443,6 +445,135 @@ export class AuthService {
     await EmailService.sendPhoneChanged(user.email, newPhone);
 
     return this.withoutSecrets({ ...user, phone: newPhone, phoneVerified: true, pendingPhone: undefined as unknown as string });
+  }
+
+  // ── Change email address (login credential) ─────────────────────
+  // Email has never been editable through the plain profile-update
+  // endpoint (UserSanitizer.update never included it) — this flow is the
+  // only way to change it, full stop. Unlike phone, email is unique, so
+  // availability is checked here AND race-guarded again at confirm time
+  // in case someone else claims the same address in between.
+  static async requestEmailChange(userId: string, data: { newEmail: string }) {
+    validateRequestEmailChange(data);
+
+    const repo = await this.repo();
+    const user = await repo.findOne({ where: { id: userId, isDeleted: false } });
+    if (!user) {
+      throw new CustomAppError("User not found", 404, ErrorCodes.USER_NOT_FOUND.code, ErrorCodes.USER_NOT_FOUND.label, "user_not_found");
+    }
+
+    const newEmail = data.newEmail.trim().toLowerCase();
+    if (newEmail === user.email) {
+      throw new CustomAppError("This is already your current email", 400, ErrorCodes.VALIDATION_FAILED.code, ErrorCodes.VALIDATION_FAILED.label, "validation_failed");
+    }
+
+    const existing = await repo.findOne({ where: { email: newEmail, isDeleted: false } });
+    if (existing) {
+      throw new CustomAppError("This email is already in use by another account", 400, ErrorCodes.RECORD_ALREADY_EXISTS.code, ErrorCodes.RECORD_ALREADY_EXISTS.label, "email_already_in_use");
+    }
+
+    const db = await AppDataSource();
+    const otp = generateOTP();
+
+    await db.transaction(async (manager) => {
+      const tokenRepo = manager.getRepository(VerificationToken);
+
+      await tokenRepo.delete({
+        user: { id: user.id },
+        purpose: VerificationTokenPurpose.EMAIL_VERIFICATION,
+        consumedAt: IsNull(),
+      });
+
+      const token = tokenRepo.create({
+        user,
+        purpose: VerificationTokenPurpose.EMAIL_VERIFICATION,
+        tokenHash: await hashOTP(otp),
+        expiresAt: new Date(Date.now() + OTP_TTL_MS),
+      });
+      await tokenRepo.save(token);
+
+      await manager.update(User, user.id, { pendingEmail: newEmail });
+
+      await writeAuditLog(
+        {
+          actorUserId: user.id,
+          action: AuditAction.EMAIL_CHANGE_REQUESTED,
+          entityType: AuditEntityType.USER,
+          entityId: user.id,
+          metadata: { newEmail },
+        },
+        manager
+      );
+    });
+
+    await EmailService.sendEmailVerificationOTP(newEmail, otp);
+
+    return this.withoutSecrets({ ...user, pendingEmail: newEmail });
+  }
+
+  static async confirmEmailChange(userId: string, data: { otp: string }) {
+    validateConfirmEmailChange(data);
+
+    const db = await AppDataSource();
+    const userRepo = db.getRepository(User);
+    const tokenRepo = db.getRepository(VerificationToken);
+
+    const user = await userRepo.findOne({ where: { id: userId, isDeleted: false } });
+    if (!user) {
+      throw new CustomAppError("User not found", 404, ErrorCodes.USER_NOT_FOUND.code, ErrorCodes.USER_NOT_FOUND.label, "user_not_found");
+    }
+    if (!user.pendingEmail) {
+      throw new CustomAppError("No email change is currently pending", 400, ErrorCodes.INVALID_STATE.code, ErrorCodes.INVALID_STATE.label, "no_pending_email_change");
+    }
+
+    const token = await tokenRepo.findOne({
+      where: {
+        user: { id: user.id },
+        purpose: VerificationTokenPurpose.EMAIL_VERIFICATION,
+        consumedAt: IsNull(),
+      },
+      order: { createdAt: "DESC" },
+    });
+
+    if (!token || token.expiresAt < new Date()) {
+      throw new CustomAppError("Invalid or expired code", 400, ErrorCodes.INVALID_OTP.code, ErrorCodes.INVALID_OTP.label, "invalid_otp");
+    }
+
+    const valid = await compareOTP(data.otp.trim(), token.tokenHash);
+    if (!valid) {
+      throw new CustomAppError("Invalid or expired code", 400, ErrorCodes.INVALID_OTP.code, ErrorCodes.INVALID_OTP.label, "invalid_otp");
+    }
+
+    const oldEmail = user.email;
+    const newEmail = user.pendingEmail;
+
+    try {
+      await db.transaction(async (manager) => {
+        await manager.update(VerificationToken, token.id, { consumedAt: new Date() });
+        await manager.update(User, user.id, { email: newEmail, emailVerified: true, pendingEmail: null as unknown as string });
+        await writeAuditLog(
+          {
+            actorUserId: user.id,
+            action: AuditAction.EMAIL_CHANGE_CONFIRMED,
+            entityType: AuditEntityType.USER,
+            entityId: user.id,
+            metadata: { oldEmail, newEmail },
+          },
+          manager
+        );
+      });
+    } catch (err: unknown) {
+      // Race guard: someone else claimed newEmail between request and
+      // confirm (email has a DB unique constraint).
+      if (typeof err === "object" && err !== null && "code" in err && (err as { code: unknown }).code === "23505") {
+        throw new CustomAppError("This email is already in use by another account", 400, ErrorCodes.RECORD_ALREADY_EXISTS.code, ErrorCodes.RECORD_ALREADY_EXISTS.label, "email_already_in_use");
+      }
+      throw err;
+    }
+
+    await EmailService.sendEmailChanged(oldEmail, newEmail);
+
+    return this.withoutSecrets({ ...user, email: newEmail, emailVerified: true, pendingEmail: undefined as unknown as string });
   }
 
   // (admin use only) Marks the email as verified without an OTP — e.g. for

@@ -53,3 +53,12 @@ export type RequestPhoneChangeDTO = {
 export type ConfirmPhoneChangeDTO = {
   otp: string;
 };
+
+// ── Email change ───────────────────────────────────────────────
+export type RequestEmailChangeDTO = {
+  newEmail: string;
+};
+
+export type ConfirmEmailChangeDTO = {
+  otp: string;
+};

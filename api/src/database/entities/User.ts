@@ -58,6 +58,15 @@ export class User extends AppBaseEntity {
   @Column({ name: "pending_phone", type: "varchar", length: 20, nullable: true })
   pendingPhone?: string;
 
+  // Same idea as pendingPhone, but for email — the login credential, so
+  // uniqueness is checked at request time (and race-guarded again at
+  // confirm time, in case someone else claims the same email in between).
+  // Unlike phone, there is no "freely editable before first verification"
+  // exception here — email has never been changeable through the plain
+  // profile-update endpoint at all, so this flow is the only way, period.
+  @Column({ name: "pending_email", type: "varchar", length: 255, nullable: true })
+  pendingEmail?: string;
+
   @OneToMany(() => Election, (election) => election.createdBy)
   elections!: Relation<Election[]>;
 
