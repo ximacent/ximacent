@@ -1,6 +1,6 @@
 import { CustomAppError } from "@/lib/errors/customAppError";
 import { ErrorCodes } from "@/lib/errors/errorCodes";
-import { RegisterDTO, RequestEmailVerificationDTO, VerifyEmailOTPDTO, ChangePasswordDTO, RequestPasswordResetDTO, ResetPasswordDTO, RequestPhoneChangeDTO, ConfirmPhoneChangeDTO, ConfirmEmailChangeDTO, RequestEmailChangeDTO } from "@/types/auth.type";
+import { RegisterDTO, RequestEmailVerificationDTO, VerifyEmailOTPDTO, ChangePasswordDTO, RequestPasswordResetDTO, ResetPasswordDTO, RequestPhoneChangeDTO, ConfirmPhoneChangeDTO, RequestEmailChangeDTO, ConfirmEmailChangeDTO } from "@/types/auth.type";
 
 function fail(message: string): never {
   throw new CustomAppError(message, 400, ErrorCodes.VALIDATION_FAILED.code, ErrorCodes.VALIDATION_FAILED.label, "validation_failed");

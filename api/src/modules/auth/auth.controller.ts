@@ -1,5 +1,5 @@
 import { AuthService } from "@/modules/auth/auth.service";
-import type { LoginDTO, RequestEmailVerificationDTO, VerifyEmailOTPDTO, ChangePasswordDTO, RequestPasswordResetDTO, ResetPasswordDTO, ConfirmPhoneChangeDTO, RequestPhoneChangeDTO, ConfirmEmailChangeDTO, RequestEmailChangeDTO } from "@/types/auth.type";
+import type { LoginDTO, RequestEmailVerificationDTO, VerifyEmailOTPDTO, ChangePasswordDTO, RequestPasswordResetDTO, ResetPasswordDTO, RequestPhoneChangeDTO, ConfirmPhoneChangeDTO, RequestEmailChangeDTO, ConfirmEmailChangeDTO } from "@/types/auth.type";
 
 export class AuthController {
   static async login(data: LoginDTO) {

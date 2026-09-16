@@ -369,6 +369,100 @@ export class ElectionService {
     return this.toSafeElection(saved);
   }
 
+  // ── Scheduled transitions (no human actor — triggered by a cron/scheduler) ──
+  // APPROVED elections whose startDate has arrived move to ACTIVE on their
+  // own; ACTIVE elections whose endDate has passed move to CLOSED. Neither
+  // is a new security boundary — the payment flow already independently
+  // rejects votes once `now > endDate` regardless of status (see
+  // PaymentService), so this is about the platform's own bookkeeping (an
+  // approved election shouldn't sit invisible past its start date, and a
+  // finished one shouldn't keep showing as "active" on public listings)
+  // rather than closing a gap that could otherwise be exploited.
+  //
+  // Route-level auth (a shared-secret header, not a user JWT) is the only
+  // thing gating who can call this — see the route file. There is no
+  // `actor` here by design: this never runs on a user's behalf.
+  static async runScheduledTransitions() {
+    const repo = await this.repo();
+    const now = new Date();
+
+    const launched = await this.autoLaunchDueElections(repo, now);
+    const closed = await this.autoCloseExpiredElections(repo, now);
+
+    return { launched, closed };
+  }
+
+  private static async autoLaunchDueElections(repo: Awaited<ReturnType<typeof this.repo>>, now: Date) {
+    const candidates = await repo.find({
+      where: { status: ElectionStatus.APPROVED, isDeleted: false },
+      relations: { categories: true, createdBy: true },
+    });
+
+    const results: { id: string; title: string; skippedReason?: string }[] = [];
+
+    for (const election of candidates) {
+      if (election.startDate > now) continue; // not due yet
+
+      // If it's already past its own end date by the time we get to it
+      // (e.g. approval sat too long), don't silently launch-then-instantly
+      // -close it — skip and leave it for an admin to look at explicitly,
+      // since that's an unusual enough situation to warrant a human eye.
+      if (election.endDate <= now) {
+        results.push({ id: election.id, title: election.title, skippedReason: "endDate already passed before launch" });
+        continue;
+      }
+
+      if (!election.categories || election.categories.length === 0) {
+        results.push({ id: election.id, title: election.title, skippedReason: "no categories yet" });
+        continue;
+      }
+
+      election.status = ElectionStatus.ACTIVE;
+      const saved = await repo.save(election);
+
+      await writeAuditLog({
+        action: AuditAction.ELECTION_AUTO_LAUNCHED,
+        entityType: AuditEntityType.ELECTION,
+        entityId: saved.id,
+        metadata: { from: ElectionStatus.APPROVED, to: ElectionStatus.ACTIVE, system: true },
+      });
+
+      if (saved.createdBy?.email) {
+        await EmailService.sendElectionLaunched(saved.createdBy.email, saved.title);
+      }
+
+      results.push({ id: saved.id, title: saved.title });
+    }
+
+    return results;
+  }
+
+  private static async autoCloseExpiredElections(repo: Awaited<ReturnType<typeof this.repo>>, now: Date) {
+    const candidates = await repo.find({
+      where: { status: ElectionStatus.ACTIVE, isDeleted: false },
+    });
+
+    const results: { id: string; title: string }[] = [];
+
+    for (const election of candidates) {
+      if (election.endDate > now) continue; // not due yet
+
+      election.status = ElectionStatus.CLOSED;
+      const saved = await repo.save(election);
+
+      await writeAuditLog({
+        action: AuditAction.ELECTION_AUTO_CLOSED,
+        entityType: AuditEntityType.ELECTION,
+        entityId: saved.id,
+        metadata: { from: ElectionStatus.ACTIVE, to: ElectionStatus.CLOSED, system: true },
+      });
+
+      results.push({ id: saved.id, title: saved.title });
+    }
+
+    return results;
+  }
+
   static async updateBanner(id: string, image: ImageFileInput) {
     if (!id || !isUUID(id)) {
       throw new CustomAppError( "Valid Election ID is required", 400, ErrorCodes.ID_REQUIRED.code, ErrorCodes.ID_REQUIRED.label, "bad_request" );

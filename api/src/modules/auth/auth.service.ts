@@ -16,10 +16,10 @@ import {
   validateChangePassword,
   validateRequestPasswordReset,
   validateResetPassword,
-  validateConfirmPhoneChange,
   validateRequestPhoneChange,
-  validateConfirmEmailChange,
+  validateConfirmPhoneChange,
   validateRequestEmailChange,
+  validateConfirmEmailChange,
 } from "./auth.validator";
 import { EmailService } from "@/lib/email/email.service";
 import { SmsService } from "@/lib/sms/sms.service";
@@ -334,7 +334,7 @@ export class AuthService {
     return this.withoutSecrets({ ...user, phoneVerified: true });
   }
 
-    // ── Change phone number (verified users only) ───────────────────
+  // ── Change phone number (verified users only) ───────────────────
   // The only way a verified phone can ever change — see the block added
   // in UserService.update. `phone`/`phoneVerified` are never touched at
   // request time; only `pendingPhone` is set here, so there's no window
@@ -359,6 +359,10 @@ export class AuthService {
     await db.transaction(async (manager) => {
       const tokenRepo = manager.getRepository(VerificationToken);
 
+      // Same "only one active OTP" invariant as regular phone
+      // verification — a fresh change request invalidates any prior
+      // unconsumed one, whether that was a first-verification OTP or an
+      // earlier change request.
       await tokenRepo.delete({
         user: { id: user.id },
         purpose: VerificationTokenPurpose.PHONE_VERIFICATION,
@@ -387,6 +391,8 @@ export class AuthService {
       );
     });
 
+    // OTP goes to the NEW number — proving ownership of it is the entire
+    // point, not just re-confirming the old one.
     await SmsService.sendPhoneVerificationOTP(newPhone, otp);
 
     return this.withoutSecrets({ ...user, pendingPhone: newPhone });
@@ -429,6 +435,8 @@ export class AuthService {
 
     await db.transaction(async (manager) => {
       await manager.update(VerificationToken, token.id, { consumedAt: new Date() });
+      // phone and phoneVerified only ever change together, atomically,
+      // right here — this is the single moment the number becomes real.
       await manager.update(User, user.id, { phone: newPhone, phoneVerified: true, pendingPhone: null as unknown as string });
       await writeAuditLog(
         {
@@ -442,6 +450,8 @@ export class AuthService {
       );
     });
 
+    // Notify via email (a stable, already-verified channel) in case this
+    // wasn't the account owner — same reasoning as sendPasswordChanged.
     await EmailService.sendPhoneChanged(user.email, newPhone);
 
     return this.withoutSecrets({ ...user, phone: newPhone, phoneVerified: true, pendingPhone: undefined as unknown as string });
@@ -506,6 +516,7 @@ export class AuthService {
       );
     });
 
+    // OTP goes to the NEW address — proving ownership of it is the point.
     await EmailService.sendEmailVerificationOTP(newEmail, otp);
 
     return this.withoutSecrets({ ...user, pendingEmail: newEmail });
@@ -550,6 +561,9 @@ export class AuthService {
     try {
       await db.transaction(async (manager) => {
         await manager.update(VerificationToken, token.id, { consumedAt: new Date() });
+        // email and emailVerified change together, atomically — this is
+        // the only moment the address becomes real. emailVerified stays
+        // true since the OTP just proved ownership of it.
         await manager.update(User, user.id, { email: newEmail, emailVerified: true, pendingEmail: null as unknown as string });
         await writeAuditLog(
           {
@@ -571,6 +585,8 @@ export class AuthService {
       throw err;
     }
 
+    // Notify the OLD address — still the stable, previously-verified
+    // channel at this exact moment — in case this wasn't the account owner.
     await EmailService.sendEmailChanged(oldEmail, newEmail);
 
     return this.withoutSecrets({ ...user, email: newEmail, emailVerified: true, pendingEmail: undefined as unknown as string });

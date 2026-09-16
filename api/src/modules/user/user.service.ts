@@ -212,7 +212,7 @@ export class UserService {
     const updatedUser = repo.merge(existingUser, safeData);
     return this.withoutPassword(await repo.save(updatedUser));
   }
-  
+
   // Blocks any action that would leave zero super_admin accounts — the
   // same "can't lock everyone out of the top tier" rule GitHub orgs / AWS
   // root accounts enforce. Pass the ids of super_admin accounts that are

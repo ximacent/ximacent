@@ -8,21 +8,13 @@ function fail(message: string): never {
 }
 
 const GH_CARD_REGEX = /^GHA-\d{9}-\d$/;
-const GHANA_REGIONS = [
-  "Ahafo", "Ashanti", "Bono", "Bono East", "Central", "Eastern", "Greater Accra", "North East",
-  "Northern", "Oti", "Savannah", "Upper East", "Upper West", "Volta", "Western", "Western North",
-] as const;
 
 export function validateUpdateOrganizerProfile(data: UpdateOrganizerProfileDTO) {
   if (data.organizationName !== undefined && !data.organizationName.trim()) fail("organizationName cannot be empty");
   if (data.organizationType !== undefined && !Object.values(OrganizationType).includes(data.organizationType)) {
     fail(`organizationType must be one of: ${Object.values(OrganizationType).join(", ")}`);
   }
-  if (data.region !== undefined) {
-    const region = data.region.trim();
-    if (!region) fail("region cannot be empty");
-    if (!GHANA_REGIONS.includes(region as (typeof GHANA_REGIONS)[number])) fail(`region must be one of: ${GHANA_REGIONS.join(", ")}`);
-  }
+  if (data.region !== undefined && !data.region.trim()) fail("region cannot be empty");
   if (data.city !== undefined && !data.city.trim()) fail("city cannot be empty");
   if (data.organizationPhone !== undefined && !data.organizationPhone.trim()) fail("organizationPhone cannot be empty");
   if (data.ghCardNumber !== undefined) {

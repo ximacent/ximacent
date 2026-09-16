@@ -24,11 +24,7 @@ export class SmtpEmailProvider implements EmailProvider {
       port: Number(port),
       secure: Number(port) === 465,
       auth: { user, pass },
-      family: 4,
-      connectionTimeout: 10000, // 10s to establish TCP connection
-      greetingTimeout: 10000,   // 10s to get SMTP greeting after connecting
-      socketTimeout: 15000,     // 15s of inactivity before giving up
-    } as any);
+    });
   }
 
   async send(message: EmailMessage): Promise<void> {

@@ -57,8 +57,6 @@ pinName(VerificationToken, "VerificationToken");
 //       Payment,
 //       User,
 //       Vote,
-//       OrganizerProfile,
-//       VerificationToken,
 //     ],
 //   });
 
@@ -70,7 +68,7 @@ pinName(VerificationToken, "VerificationToken");
 // };
 
 
-// //Production
+//Production
 declare global {
   // eslint-disable-next-line no-var
   var __appDataSource: DataSource | undefined;

@@ -5,6 +5,8 @@ import {
   roleChangedTemplate,
   passwordResetOTPTemplate,
   passwordChangedTemplate,
+  phoneChangedTemplate,
+  emailChangedTemplate,
   organizerApplicationSubmittedTemplate,
   organizerApprovedTemplate,
   organizerRejectedTemplate,
@@ -12,9 +14,8 @@ import {
   lowSmsCreditTemplate,
   electionSubmittedTemplate,
   electionApprovedTemplate,
+  electionLaunchedTemplate,
   electionRejectedTemplate,
-  phoneChangedTemplate,
-  emailChangedTemplate,
 } from "./templates";
 
 /**
@@ -61,7 +62,7 @@ export class EmailService {
 
   static async sendEmailChanged(to: string, newEmail: string) {
     await this.safeSend(to, emailChangedTemplate(newEmail));
-  }  
+  }
 
   static async sendOrganizerApplicationSubmitted(to: string) {
     await this.safeSend(to, organizerApplicationSubmittedTemplate());
@@ -89,6 +90,10 @@ export class EmailService {
 
   static async sendElectionApproved(to: string, electionTitle: string) {
     await this.safeSend(to, electionApprovedTemplate(electionTitle));
+  }
+
+  static async sendElectionLaunched(to: string, electionTitle: string) {
+    await this.safeSend(to, electionLaunchedTemplate(electionTitle));
   }
 
   static async sendElectionRejected(to: string, electionTitle: string, reason: string) {
