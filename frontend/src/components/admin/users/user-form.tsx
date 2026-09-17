@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import { PasswordStrengthMeter } from "./password-strength-meter";
 import { createUserFormSchema, type CreateUserFormValues } from "@/lib/validation/user";
-import { capitalizeFirstLetter } from "@/lib/formatters";
+import { titleCase } from "@/lib/formatters";
 
 export interface UserFormProps {
   isSubmitting: boolean;
@@ -39,7 +39,7 @@ export function UserForm({ isSubmitting, onSubmit, onCancel }: UserFormProps) {
   const lastNameField = register("lastName");
 
   function submitFormatted(values: CreateUserFormValues) {
-    const formatted = { ...values, firstName: capitalizeFirstLetter(values.firstName), lastName: capitalizeFirstLetter(values.lastName) };
+    const formatted = { ...values, firstName: titleCase(values.firstName), lastName: titleCase(values.lastName) };
     setValue("firstName", formatted.firstName, { shouldDirty: true, shouldValidate: true });
     setValue("lastName", formatted.lastName, { shouldDirty: true, shouldValidate: true });
     onSubmit(formatted);
@@ -59,7 +59,7 @@ export function UserForm({ isSubmitting, onSubmit, onCancel }: UserFormProps) {
             autoComplete="given-name"
             autoFocus
             {...firstNameField}
-            onBlur={(event) => { firstNameField.onBlur(event); setValue("firstName", capitalizeFirstLetter(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
+            onBlur={(event) => { firstNameField.onBlur(event); setValue("firstName", titleCase(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
           />
           {errors.firstName && <p className="text-xs text-rose">{errors.firstName.message}</p>}
         </div>
@@ -71,7 +71,7 @@ export function UserForm({ isSubmitting, onSubmit, onCancel }: UserFormProps) {
             disabled={isSubmitting}
             autoComplete="family-name"
             {...lastNameField}
-            onBlur={(event) => { lastNameField.onBlur(event); setValue("lastName", capitalizeFirstLetter(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
+            onBlur={(event) => { lastNameField.onBlur(event); setValue("lastName", titleCase(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
           />
           {errors.lastName && <p className="text-xs text-rose">{errors.lastName.message}</p>}
         </div>

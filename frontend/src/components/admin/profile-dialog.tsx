@@ -17,7 +17,7 @@ import { useAuth } from "./auth-provider";
 import { ChangePasswordDialog } from "./change-password-dialog";
 import { ChangePhoneDialog } from "./change-phone-dialog";
 import { ChangeEmailDialog } from "./change-email-dialog";
-import { capitalizeFirstLetter } from "@/lib/formatters";
+import { titleCase } from "@/lib/formatters";
 
 export function ProfileTriggerButton({
   className,
@@ -101,8 +101,8 @@ export function ProfileDialog({
 
       const currentUser = profileUser ?? user;
       return updateUser(user.id, {
-        firstName: capitalizeFirstLetter(values.firstName),
-        lastName: capitalizeFirstLetter(values.lastName),
+        firstName: titleCase(values.firstName),
+        lastName: titleCase(values.lastName),
         ...(currentUser.phoneVerified ? {} : { phone: values.phone || undefined }),
       });
     },
@@ -182,7 +182,7 @@ export function ProfileDialog({
                   disabled={isBusy}
                   autoComplete="given-name"
                   {...firstNameField}
-                  onBlur={(event) => { firstNameField.onBlur(event); setValue("firstName", capitalizeFirstLetter(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
+                  onBlur={(event) => { firstNameField.onBlur(event); setValue("firstName", titleCase(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
                 />
                 {errors.firstName && <p className="text-xs text-rose">{errors.firstName.message}</p>}
               </div>
@@ -195,7 +195,7 @@ export function ProfileDialog({
                   disabled={isBusy}
                   autoComplete="family-name"
                   {...lastNameField}
-                  onBlur={(event) => { lastNameField.onBlur(event); setValue("lastName", capitalizeFirstLetter(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
+                  onBlur={(event) => { lastNameField.onBlur(event); setValue("lastName", titleCase(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
                 />
                 {errors.lastName && <p className="text-xs text-rose">{errors.lastName.message}</p>}
               </div>

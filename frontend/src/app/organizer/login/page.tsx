@@ -17,7 +17,7 @@ import { ApiError } from "@/lib/api/types";
 import { login, register } from "@/lib/api/users";
 import { passwordSchema } from "@/lib/validation/user";
 import { useAuth } from "@/components/admin/auth-provider";
-import { capitalizeFirstLetter } from "@/lib/formatters";
+import { titleCase } from "@/lib/formatters";
 
 const loginSchema = z.object({
   email: z.string().min(1, "Email is required").email("Enter a valid email address"),
@@ -67,7 +67,7 @@ export default function OrganizerPortalPage() {
   async function handleRegister(values: RegisterValues) {
     setIsSubmitting(true);
     try {
-      const result = await register({ ...values, firstName: capitalizeFirstLetter(values.firstName), lastName: capitalizeFirstLetter(values.lastName), role: "organizer" });
+      const result = await register({ ...values, firstName: titleCase(values.firstName), lastName: titleCase(values.lastName), role: "organizer" });
       setUser(result.user);
       toast.success("Organizer account created", {
         description: "Your account is ready. Complete your verification and profile next.",
@@ -137,7 +137,7 @@ export default function OrganizerPortalPage() {
               </form>
             ) : (
               <form onSubmit={registerForm.handleSubmit(handleRegister)} className="mt-7 space-y-4" noValidate>
-                <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2"><Label htmlFor="organizer-first-name">First name</Label><Input id="organizer-first-name" placeholder="Ama" autoComplete="given-name" disabled={isSubmitting} {...firstNameField} onBlur={(event) => { firstNameField.onBlur(event); registerForm.setValue("firstName", capitalizeFirstLetter(event.target.value), { shouldDirty: true, shouldValidate: true }); }} />{registerForm.formState.errors.firstName && <p className="text-xs text-rose">{registerForm.formState.errors.firstName.message}</p>}</div><div className="space-y-2"><Label htmlFor="organizer-last-name">Last name</Label><Input id="organizer-last-name" placeholder="Owusu" autoComplete="family-name" disabled={isSubmitting} {...lastNameField} onBlur={(event) => { lastNameField.onBlur(event); registerForm.setValue("lastName", capitalizeFirstLetter(event.target.value), { shouldDirty: true, shouldValidate: true }); }} />{registerForm.formState.errors.lastName && <p className="text-xs text-rose">{registerForm.formState.errors.lastName.message}</p>}</div></div>
+                <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2"><Label htmlFor="organizer-first-name">First name</Label><Input id="organizer-first-name" placeholder="Ama" autoComplete="given-name" disabled={isSubmitting} {...firstNameField} onBlur={(event) => { firstNameField.onBlur(event); registerForm.setValue("firstName", titleCase(event.target.value), { shouldDirty: true, shouldValidate: true }); }} />{registerForm.formState.errors.firstName && <p className="text-xs text-rose">{registerForm.formState.errors.firstName.message}</p>}</div><div className="space-y-2"><Label htmlFor="organizer-last-name">Last name</Label><Input id="organizer-last-name" placeholder="Owusu" autoComplete="family-name" disabled={isSubmitting} {...lastNameField} onBlur={(event) => { lastNameField.onBlur(event); registerForm.setValue("lastName", titleCase(event.target.value), { shouldDirty: true, shouldValidate: true }); }} />{registerForm.formState.errors.lastName && <p className="text-xs text-rose">{registerForm.formState.errors.lastName.message}</p>}</div></div>
                 <div className="space-y-2"><Label htmlFor="organizer-register-email">Email</Label><div className="relative"><Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone" /><Input id="organizer-register-email" type="email" className="pl-9" placeholder="you@organization.com" autoComplete="email" disabled={isSubmitting} {...registerForm.register("email")} /></div>{registerForm.formState.errors.email && <p className="text-xs text-rose">{registerForm.formState.errors.email.message}</p>}</div>
                 <div className="space-y-2"><Label htmlFor="organizer-phone">Phone</Label><div className="relative"><Phone className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone" /><Input id="organizer-phone" type="tel" className="pl-9" placeholder="020 123 4567" autoComplete="tel" disabled={isSubmitting} {...registerForm.register("phone")} /></div>{registerForm.formState.errors.phone && <p className="text-xs text-rose">{registerForm.formState.errors.phone.message}</p>}</div>
                 <div className="space-y-2"><Label htmlFor="organizer-register-password">Password</Label><PasswordInput id="organizer-register-password" placeholder="Create a strong password" autoComplete="new-password" disabled={isSubmitting} {...registerForm.register("password")} />{registerForm.formState.errors.password && <p className="text-xs text-rose">{registerForm.formState.errors.password.message}</p>}</div>
