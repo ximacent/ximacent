@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { buildElectionSchema, type ElectionFormValues } from "@/lib/validation/election";
 import type { ElectionStatus } from "@/lib/api/types";
+import { sentenceCase, uppercase } from "@/lib/formatters";
 
 export interface ElectionFormProps {
   mode: "create" | "edit";
@@ -38,6 +39,7 @@ export function ElectionForm({
 
   const {
     register,
+    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm<ElectionFormValues>({
@@ -52,8 +54,18 @@ export function ElectionForm({
     },
   });
 
+  const titleField = register("title");
+  const descriptionField = register("description");
+
+  function submitFormatted(values: ElectionFormValues) {
+    const formatted = { ...values, title: uppercase(values.title), description: sentenceCase(values.description ?? "") };
+    setValue("title", formatted.title, { shouldDirty: true, shouldValidate: true });
+    setValue("description", formatted.description, { shouldDirty: true, shouldValidate: true });
+    onSubmit(formatted);
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+    <form onSubmit={handleSubmit(submitFormatted)} className="space-y-5" noValidate>
       <div className="space-y-2">
         <Label htmlFor="title">Title</Label>
         <Input
@@ -61,7 +73,8 @@ export function ElectionForm({
           placeholder="Miss Universe Ghana 2026"
           disabled={isSubmitting}
           autoComplete="off"
-          {...register("title")}
+          {...titleField}
+          onBlur={(event) => { titleField.onBlur(event); setValue("title", uppercase(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
         />
         <p className="text-xs text-stone">Saved in uppercase and used to generate the public slug.</p>
         {errors.title && <p className="text-xs text-rose">{errors.title.message}</p>}
@@ -74,7 +87,8 @@ export function ElectionForm({
           rows={4}
           placeholder="What is this election for?"
           disabled={isSubmitting}
-          {...register("description")}
+          {...descriptionField}
+          onBlur={(event) => { descriptionField.onBlur(event); setValue("description", sentenceCase(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
         />
         {errors.description && <p className="text-xs text-rose">{errors.description.message}</p>}
       </div>

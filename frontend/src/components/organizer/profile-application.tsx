@@ -26,6 +26,7 @@ import {
 import { getUser, updateUser } from "@/lib/api/users";
 import { organizerProfileSchema, type OrganizerProfileFormValues } from "@/lib/validation/organizer";
 import { useAuth } from "@/components/admin/auth-provider";
+import { sentenceCase, titleCase } from "@/lib/formatters";
 
 const STATUS_COPY: Record<OrganizerVerificationStatus, { label: string; description: string; className: string }> = {
   not_started: { label: "Profile not submitted", description: "Complete your profile, then submit it for review.", className: "border-champagne/30 bg-champagne/5 text-champagne" },
@@ -62,15 +63,24 @@ function formatGhanaCardInput(value: string): string {
 
 function profileValues(profile?: OrganizerProfile): OrganizerProfileFormValues {
   return {
-    organizationName: profile?.organizationName ?? "",
+    organizationName: titleCase(profile?.organizationName ?? ""),
     organizationType: profile?.organizationType,
     region: profile?.region ?? "",
-    city: profile?.city ?? "",
+    city: titleCase(profile?.city ?? ""),
     organizationPhone: profile?.organizationPhone ?? "",
     website: profile?.website ?? "",
     socialMediaUrl: profile?.socialMediaUrl ?? "",
-    description: profile?.description ?? "",
+    description: sentenceCase(profile?.description ?? ""),
     ghCardNumber: formatGhanaCardNumber(profile?.ghCardNumber ?? ""),
+  };
+}
+
+function formattedProfileValues(values: OrganizerProfileFormValues): OrganizerProfileFormValues {
+  return {
+    ...values,
+    organizationName: titleCase(values.organizationName ?? ""),
+    city: titleCase(values.city ?? ""),
+    description: sentenceCase(values.description ?? ""),
   };
 }
 
@@ -139,14 +149,14 @@ export function ProfileApplication() {
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview); }, [preview]);
 
   const updateMutation = useMutation({
-    mutationFn: async () => {
-      const parsed = organizerProfileSchema.safeParse(values);
+    mutationFn: async (valuesToSave: OrganizerProfileFormValues) => {
+      const parsed = organizerProfileSchema.safeParse(valuesToSave);
       if (!parsed.success) throw new ApiError(parsed.error.issues[0]?.message ?? "Check your profile details", 400, { code: "validation_failed", label: "validation_failed", key: "validation_failed" });
       if (!personalPhoneVerified) {
         const updatedUser = await updateUser(user!.id, { phone: personalPhone.trim() });
         queryClient.setQueryData(["current-user-profile", user!.id], updatedUser);
       }
-      return updateMyOrganizerProfile({ ...values, organizationPhone: usePersonalPhone ? personalPhone.trim() : values.organizationPhone }, image);
+      return updateMyOrganizerProfile({ ...valuesToSave, organizationPhone: usePersonalPhone ? personalPhone.trim() : valuesToSave.organizationPhone }, image);
     },
     onSuccess: (updated) => {
       queryClient.setQueryData(["organizer-profile"], updated);
@@ -163,11 +173,11 @@ export function ProfileApplication() {
   });
 
   const submitMutation = useMutation({
-    mutationFn: async () => {
-      const parsed = organizerProfileSchema.safeParse(values);
+    mutationFn: async (valuesToSubmit: OrganizerProfileFormValues) => {
+      const parsed = organizerProfileSchema.safeParse(valuesToSubmit);
       if (!parsed.success) throw new ApiError(parsed.error.issues[0]?.message ?? "Check your profile details", 400, { code: "validation_failed", label: "validation_failed", key: "validation_failed" });
       if (!personalPhoneVerified) await updateUser(user!.id, { phone: personalPhone.trim() });
-      await updateMyOrganizerProfile({ ...values, organizationPhone: usePersonalPhone ? personalPhone.trim() : values.organizationPhone }, image);
+      await updateMyOrganizerProfile({ ...valuesToSubmit, organizationPhone: usePersonalPhone ? personalPhone.trim() : valuesToSubmit.organizationPhone }, image);
       return submitOrganizerApplication();
     },
     onSuccess: (updated) => {
@@ -202,15 +212,27 @@ export function ProfileApplication() {
   }
 
   function save() {
-    const parsed = organizerProfileSchema.safeParse({ ...values, organizationPhone: usePersonalPhone ? personalPhone.trim() : values.organizationPhone });
+    const nextValues = formattedProfileValues(values);
+    const parsed = organizerProfileSchema.safeParse({ ...nextValues, organizationPhone: usePersonalPhone ? personalPhone.trim() : nextValues.organizationPhone });
     if (!parsed.success) { toast.error("Check your profile details", { description: parsed.error.issues[0]?.message }); return; }
-    updateMutation.mutate();
+    setValues(nextValues);
+    updateMutation.mutate(nextValues);
+  }
+
+  function submit() {
+    const nextValues = formattedProfileValues(values);
+    setValues(nextValues);
+    submitMutation.mutate(nextValues);
   }
 
   function togglePersonalPhone(checked: boolean) {
     setUsePersonalPhone(checked);
     if (checked) setField("organizationPhone", personalPhone.trim());
     else setField("organizationPhone", "");
+  }
+
+  function formatFieldOnBlur(field: "organizationName" | "city" | "description", value: string) {
+    setField(field, field === "description" ? sentenceCase(value) : titleCase(value));
   }
 
   return (
@@ -227,32 +249,32 @@ export function ProfileApplication() {
 
       <div className="space-y-6 p-5 sm:p-6">
         <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="Organization name" id="organization-name" value={values.organizationName ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("organizationName", value)} />
+          <Field label="Organization name" id="organization-name" value={values.organizationName ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("organizationName", value)} onBlur={(value) => formatFieldOnBlur("organizationName", value)} />
           <div className="space-y-2"><Label htmlFor="organization-type">Organization type</Label><Select value={values.organizationType ?? ""} onValueChange={(value) => setField("organizationType", value as OrganizationType)} disabled={locked}><SelectTrigger id="organization-type"><SelectValue placeholder="Choose a type" /></SelectTrigger><SelectContent>{organizationTypes.map((type) => <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>)}</SelectContent></Select>{missing.some((field) => field.toLowerCase().includes("organizationtype")) && <p className="text-xs text-rose">Organization type is required.</p>}</div>
           <div className="space-y-2"><Label htmlFor="organization-region">Region</Label><Select value={values.region ?? ""} onValueChange={(value) => setField("region", value)} disabled={locked}><SelectTrigger id="organization-region" className={missing.some((field) => matchesFieldRequirement(field, "region")) ? "border-rose/70" : undefined}><SelectValue placeholder="Choose a Ghana region" /></SelectTrigger><SelectContent>{ghanaRegions.map((region) => <SelectItem key={region} value={region}>{region}</SelectItem>)}</SelectContent></Select>{missing.some((field) => matchesFieldRequirement(field, "region")) && <p className="text-xs text-rose">Choose a Ghana region.</p>}</div>
-          <Field label="City" id="organization-city" value={values.city ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("city", value)} />
+          <Field label="City" id="organization-city" value={values.city ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("city", value)} onBlur={(value) => formatFieldOnBlur("city", value)} />
           <div className="space-y-2"><Field label="Organization phone" id="organization-phone" value={values.organizationPhone ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("organizationPhone", value)} /><label className="flex items-start gap-2 text-xs text-stone"><input type="checkbox" checked={usePersonalPhone} disabled={locked || !personalPhone.trim()} onChange={(event) => togglePersonalPhone(event.target.checked)} className="mt-0.5 accent-champagne" />Use my personal phone number as the organization phone number.</label></div>
           <Field label="Website" id="organization-website" value={values.website ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("website", value)} placeholder="https://example.com" />
           <Field label="Social media URL" id="social-media-url" value={values.socialMediaUrl ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("socialMediaUrl", value)} placeholder="https://instagram.com/..." />
           <Field label="Ghana Card number" id="gh-card-number" value={values.ghCardNumber ?? ""} disabled={locked} missing={missing} onChange={(value) => setField("ghCardNumber", value)} placeholder="GHA-XXXXXXXXX-X" />
         </div>
 
-        <div className="space-y-2"><Label htmlFor="organization-description">Description</Label><Textarea id="organization-description" value={values.description ?? ""} disabled={locked} placeholder="Tell us about your organization and the kinds of elections you run." onChange={(event) => setField("description", event.target.value)} />{missing.some((field) => field.toLowerCase().includes("description")) && <p className="text-xs text-rose">Description needs attention.</p>}</div>
+        <div className="space-y-2"><Label htmlFor="organization-description">Description</Label><Textarea id="organization-description" value={values.description ?? ""} disabled={locked} placeholder="Tell us about your organization and the kinds of elections you run." onChange={(event) => setField("description", event.target.value)} onBlur={(event) => formatFieldOnBlur("description", event.target.value)} />{missing.some((field) => field.toLowerCase().includes("description")) && <p className="text-xs text-rose">Description needs attention.</p>}</div>
 
         <div className="space-y-3"><Label htmlFor="gh-card-image">Ghana Card front image</Label><div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_10rem] sm:items-start"><label htmlFor="gh-card-image" className={`flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border/80 bg-secondary/25 p-4 text-center transition hover:border-champagne/50 ${locked ? "pointer-events-none opacity-60" : ""}`}><FileImage className="h-6 w-6 text-champagne" /><span className="text-sm text-cream">{image ? image.name : "Upload Ghana Card Front"}</span><span className="text-xs text-stone">JPG, PNG, or WEBP · max 5 MB</span><Input id="gh-card-image" type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" disabled={locked} onChange={(event) => chooseImage(event.target.files?.[0])} /></label>{(preview || profile?.ghCardImageUrl) && <div className="relative aspect-video overflow-hidden rounded-md border border-border/60 bg-secondary"><Image src={preview || mediaUrl(profile?.ghCardImageUrl) || ""} alt="Ghana Card front preview" fill className="object-cover" unoptimized /></div>}</div>{missing.some((field) => field.toLowerCase().includes("ghcardimage")) && <p className="text-xs text-rose">Ghana Card front image is required.</p>}</div>
 
-        {!locked && <div className="flex flex-col items-stretch gap-3 border-t border-border/60 pt-5 sm:items-end"><div className="flex flex-col gap-3 sm:flex-row"><Button type="button" variant="outline" disabled={updateMutation.isPending || submitMutation.isPending} onClick={save}>{updateMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin" />Saving…</> : <><Save className="h-4 w-4" />Save profile</>}</Button>{(status === "not_started" || status === "rejected") && <Button type="button" disabled={updateMutation.isPending || submitMutation.isPending} onClick={() => submitMutation.mutate()}>{submitMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin" />Submitting…</> : <><Send className="h-4 w-4" />Submit application</>}</Button>}</div>{status === "pending" && <div className={`w-full rounded-md border px-4 py-3 text-left text-sm sm:max-w-md ${statusCopy.className}`} role="status"><p className="font-semibold">{statusCopy.label}</p><p className="mt-1 leading-relaxed opacity-90">{statusCopy.description}</p></div>}</div>}
+        {!locked && <div className="flex flex-col items-stretch gap-3 border-t border-border/60 pt-5 sm:items-end"><div className="flex flex-col gap-3 sm:flex-row"><Button type="button" variant="outline" disabled={updateMutation.isPending || submitMutation.isPending} onClick={save}>{updateMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin" />Saving…</> : <><Save className="h-4 w-4" />Save profile</>}</Button>{(status === "not_started" || status === "rejected") && <Button type="button" disabled={updateMutation.isPending || submitMutation.isPending} onClick={submit}>{submitMutation.isPending ? <><Loader2 className="h-4 w-4 animate-spin" />Submitting…</> : <><Send className="h-4 w-4" />Submit application</>}</Button>}</div>{status === "pending" && <div className={`w-full rounded-md border px-4 py-3 text-left text-sm sm:max-w-md ${statusCopy.className}`} role="status"><p className="font-semibold">{statusCopy.label}</p><p className="mt-1 leading-relaxed opacity-90">{statusCopy.description}</p></div>}</div>}
         {locked && <div className="flex items-center gap-2 border-t border-border/60 pt-5 text-sm text-stone"><CheckCircle2 className="h-4 w-4 text-emerald-400" />Profile editing is locked while this application is {status}.</div>}
       </div>
     </section>
   );
 }
 
-function Field({ label, id, value, disabled, missing, onChange, placeholder }: { label: string; id: string; value: string; disabled: boolean; missing: string[]; onChange: (value: string) => void; placeholder?: string }) {
+function Field({ label, id, value, disabled, missing, onChange, onBlur, placeholder }: { label: string; id: string; value: string; disabled: boolean; missing: string[]; onChange: (value: string) => void; onBlur?: (value: string) => void; placeholder?: string }) {
   const fieldKey = id.replace("organization-", "");
   const hasMissing = missing.some((field) => matchesFieldRequirement(field, fieldKey));
   if (id === "gh-card-number") {
     return <div className="space-y-2"><Label htmlFor={id}>{label}</Label><div className={`flex min-h-10 items-center rounded-md border bg-secondary/25 focus-within:ring-2 focus-within:ring-ring ${hasMissing ? "border-rose/70" : "border-input"}`}><span className="shrink-0 pl-3 text-sm text-stone">GHA-</span><Input id={id} value={formatGhanaCardInput(value)} disabled={disabled} placeholder="123456789-0" inputMode="numeric" maxLength={11} onChange={(event) => onChange(formatGhanaCardNumber(event.target.value))} className="border-0 bg-transparent pl-0 shadow-none focus-visible:ring-0" /></div>{hasMissing && <p className="text-xs text-rose">This field needs attention.</p>}</div>;
   }
-  return <div className="space-y-2"><Label htmlFor={id}>{label}</Label><Input id={id} value={value} disabled={disabled} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} className={hasMissing ? "border-rose/70" : undefined} />{hasMissing && <p className="text-xs text-rose">This field needs attention.</p>}</div>;
+  return <div className="space-y-2"><Label htmlFor={id}>{label}</Label><Input id={id} value={value} disabled={disabled} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} onBlur={(event) => onBlur?.(event.target.value)} className={hasMissing ? "border-rose/70" : undefined} />{hasMissing && <p className="text-xs text-rose">This field needs attention.</p>}</div>;
 }

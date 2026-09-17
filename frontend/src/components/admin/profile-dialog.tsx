@@ -17,6 +17,7 @@ import { useAuth } from "./auth-provider";
 import { ChangePasswordDialog } from "./change-password-dialog";
 import { ChangePhoneDialog } from "./change-phone-dialog";
 import { ChangeEmailDialog } from "./change-email-dialog";
+import { capitalizeFirstLetter } from "@/lib/formatters";
 
 export function ProfileTriggerButton({
   className,
@@ -60,6 +61,7 @@ export function ProfileDialog({
 
   const {
     register,
+    setValue,
     handleSubmit,
     reset,
     formState: { errors, isDirty },
@@ -99,8 +101,8 @@ export function ProfileDialog({
 
       const currentUser = profileUser ?? user;
       return updateUser(user.id, {
-        firstName: values.firstName,
-        lastName: values.lastName,
+        firstName: capitalizeFirstLetter(values.firstName),
+        lastName: capitalizeFirstLetter(values.lastName),
         ...(currentUser.phoneVerified ? {} : { phone: values.phone || undefined }),
       });
     },
@@ -120,6 +122,8 @@ export function ProfileDialog({
   });
 
   const isBusy = isLoading || updateMutation.isPending;
+  const firstNameField = register("firstName");
+  const lastNameField = register("lastName");
 
   return (
     <Dialog
@@ -177,7 +181,8 @@ export function ProfileDialog({
                   placeholder="Ama"
                   disabled={isBusy}
                   autoComplete="given-name"
-                  {...register("firstName")}
+                  {...firstNameField}
+                  onBlur={(event) => { firstNameField.onBlur(event); setValue("firstName", capitalizeFirstLetter(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
                 />
                 {errors.firstName && <p className="text-xs text-rose">{errors.firstName.message}</p>}
               </div>
@@ -189,7 +194,8 @@ export function ProfileDialog({
                   placeholder="Owusu"
                   disabled={isBusy}
                   autoComplete="family-name"
-                  {...register("lastName")}
+                  {...lastNameField}
+                  onBlur={(event) => { lastNameField.onBlur(event); setValue("lastName", capitalizeFirstLetter(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
                 />
                 {errors.lastName && <p className="text-xs text-rose">{errors.lastName.message}</p>}
               </div>

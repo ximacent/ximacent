@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/ui/password-input";
 import { PasswordStrengthMeter } from "./password-strength-meter";
 import { createUserFormSchema, type CreateUserFormValues } from "@/lib/validation/user";
+import { capitalizeFirstLetter } from "@/lib/formatters";
 
 export interface UserFormProps {
   isSubmitting: boolean;
@@ -19,6 +20,7 @@ export interface UserFormProps {
 export function UserForm({ isSubmitting, onSubmit, onCancel }: UserFormProps) {
   const {
     register,
+    setValue,
     handleSubmit,
     watch,
     formState: { errors },
@@ -33,10 +35,20 @@ export function UserForm({ isSubmitting, onSubmit, onCancel }: UserFormProps) {
     },
   });
 
+  const firstNameField = register("firstName");
+  const lastNameField = register("lastName");
+
+  function submitFormatted(values: CreateUserFormValues) {
+    const formatted = { ...values, firstName: capitalizeFirstLetter(values.firstName), lastName: capitalizeFirstLetter(values.lastName) };
+    setValue("firstName", formatted.firstName, { shouldDirty: true, shouldValidate: true });
+    setValue("lastName", formatted.lastName, { shouldDirty: true, shouldValidate: true });
+    onSubmit(formatted);
+  }
+
   const password = watch("password");
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+    <form onSubmit={handleSubmit(submitFormatted)} className="space-y-4" noValidate>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="user-first-name">First name</Label>
@@ -46,7 +58,8 @@ export function UserForm({ isSubmitting, onSubmit, onCancel }: UserFormProps) {
             disabled={isSubmitting}
             autoComplete="given-name"
             autoFocus
-            {...register("firstName")}
+            {...firstNameField}
+            onBlur={(event) => { firstNameField.onBlur(event); setValue("firstName", capitalizeFirstLetter(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
           />
           {errors.firstName && <p className="text-xs text-rose">{errors.firstName.message}</p>}
         </div>
@@ -57,7 +70,8 @@ export function UserForm({ isSubmitting, onSubmit, onCancel }: UserFormProps) {
             placeholder="Owusu"
             disabled={isSubmitting}
             autoComplete="family-name"
-            {...register("lastName")}
+            {...lastNameField}
+            onBlur={(event) => { lastNameField.onBlur(event); setValue("lastName", capitalizeFirstLetter(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
           />
           {errors.lastName && <p className="text-xs text-rose">{errors.lastName.message}</p>}
         </div>

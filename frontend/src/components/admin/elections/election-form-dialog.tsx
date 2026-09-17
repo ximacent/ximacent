@@ -22,6 +22,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createElection, updateElection } from "@/lib/api/elections";
 import { ApiError } from "@/lib/api/types";
 import type { Election } from "@/lib/api/types";
+import { sentenceCase, uppercase } from "@/lib/formatters";
 
 // Mirrors backend validation exactly (election.validator.ts):
 // - endDate must be after startDate
@@ -76,12 +77,16 @@ export function ElectionFormDialog({
 
   const {
     register,
+    setValue,
     handleSubmit,
     reset,
     formState: { errors },
   } = useForm<ElectionFormValues>({
     resolver: zodResolver(electionSchema),
   });
+
+  const titleField = register("title");
+  const descriptionField = register("description");
 
   useEffect(() => {
     if (open) {
@@ -102,8 +107,8 @@ export function ElectionFormDialog({
   const { mutate, isPending } = useMutation({
     mutationFn: (values: ElectionFormValues) => {
       const payload = {
-        title: values.title,
-        description: values.description || undefined,
+          title: uppercase(values.title),
+          description: sentenceCase(values.description ?? "") || undefined,
         startDate: new Date(values.startDate).toISOString(),
         endDate: new Date(values.endDate).toISOString(),
         pricePerVote: values.pricePerVote,
@@ -142,7 +147,7 @@ export function ElectionFormDialog({
         <form onSubmit={handleSubmit((v) => mutate(v))} className="space-y-4" noValidate>
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
-            <Input id="title" placeholder="Miss Universe Ghana 2026" {...register("title")} />
+            <Input id="title" placeholder="Miss Universe Ghana 2026" {...titleField} onBlur={(event) => { titleField.onBlur(event); setValue("title", uppercase(event.target.value), { shouldDirty: true, shouldValidate: true }); }} />
             {errors.title && <p className="text-xs text-rose">{errors.title.message}</p>}
           </div>
 
@@ -152,7 +157,8 @@ export function ElectionFormDialog({
               id="description"
               placeholder="Annual national pageant"
               rows={3}
-              {...register("description")}
+              {...descriptionField}
+              onBlur={(event) => { descriptionField.onBlur(event); setValue("description", sentenceCase(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
             />
           </div>
 

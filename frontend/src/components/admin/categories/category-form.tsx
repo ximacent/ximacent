@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { categoryFormSchema, type CategoryFormValues } from "@/lib/validation/category";
+import { uppercase } from "@/lib/formatters";
 
 export interface CategoryFormProps {
   mode: "create" | "edit";
@@ -26,6 +27,7 @@ export function CategoryForm({
 }: CategoryFormProps) {
   const {
     register,
+    setValue,
     handleSubmit,
     formState: { errors },
   } = useForm<CategoryFormValues>({
@@ -38,8 +40,17 @@ export function CategoryForm({
     },
   });
 
+  const nameField = register("name");
+  const descriptionField = register("description");
+
+  function submitFormatted(values: CategoryFormValues) {
+    const formatted = { ...values, name: uppercase(values.name) };
+    setValue("name", formatted.name, { shouldDirty: true, shouldValidate: true });
+    onSubmit(formatted);
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+    <form onSubmit={handleSubmit(submitFormatted)} className="space-y-4" noValidate>
       <div className="space-y-2">
         <Label htmlFor="category-name">Name</Label>
         <Input
@@ -48,7 +59,8 @@ export function CategoryForm({
           disabled={isSubmitting}
           autoComplete="off"
           autoFocus
-          {...register("name")}
+          {...nameField}
+          onBlur={(event) => { nameField.onBlur(event); setValue("name", uppercase(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
         />
         <p className="text-xs text-stone">Must be unique within this election.</p>
         {errors.name && <p className="text-xs text-rose">{errors.name.message}</p>}
@@ -61,7 +73,8 @@ export function CategoryForm({
           rows={3}
           placeholder="What is this category judging?"
           disabled={isSubmitting}
-          {...register("description")}
+          {...descriptionField}
+          onBlur={descriptionField.onBlur}
         />
         {errors.description && (
           <p className="text-xs text-rose">{errors.description.message}</p>

@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { NomineeImageField } from "./nominee-image-field";
 import { nomineeFormSchema, type NomineeFormValues } from "@/lib/validation/nominee";
+import { sentenceCase, titleCase } from "@/lib/formatters";
 
 export interface NomineeCategoryOption {
   id: string;
@@ -52,6 +53,7 @@ export function NomineeForm({
 }: NomineeFormProps) {
   const {
     register,
+    setValue,
     handleSubmit,
     control,
     formState: { errors },
@@ -65,8 +67,18 @@ export function NomineeForm({
     },
   });
 
+  const nameField = register("name");
+  const bioField = register("bio");
+
+  function submitFormatted(values: NomineeFormValues) {
+    const formatted = { ...values, name: titleCase(values.name), bio: sentenceCase(values.bio ?? "") };
+    setValue("name", formatted.name, { shouldDirty: true, shouldValidate: true });
+    setValue("bio", formatted.bio, { shouldDirty: true, shouldValidate: true });
+    onSubmit(formatted);
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+    <form onSubmit={handleSubmit(submitFormatted)} className="space-y-4" noValidate>
       <div className="space-y-2">
         <Label htmlFor="nominee-name">Name</Label>
         <Input
@@ -75,7 +87,8 @@ export function NomineeForm({
           disabled={isSubmitting}
           autoComplete="off"
           autoFocus
-          {...register("name")}
+          {...nameField}
+          onBlur={(event) => { nameField.onBlur(event); setValue("name", titleCase(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
         />
         {errors.name && <p className="text-xs text-rose">{errors.name.message}</p>}
       </div>
@@ -87,7 +100,8 @@ export function NomineeForm({
           rows={3}
           placeholder="A short introduction for this nominee (optional)"
           disabled={isSubmitting}
-          {...register("bio")}
+          {...bioField}
+          onBlur={(event) => { bioField.onBlur(event); setValue("bio", sentenceCase(event.target.value), { shouldDirty: true, shouldValidate: true }); }}
         />
         {errors.bio && <p className="text-xs text-rose">{errors.bio.message}</p>}
       </div>
